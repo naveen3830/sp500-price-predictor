@@ -1,21 +1,28 @@
 import React from "react"
-import { Flame } from "lucide-react"
+import { Sparkles } from "lucide-react"
 
 interface PopularStocksProps {
   onSelectStock: (symbol: string) => void
   currentSymbol: string | null
 }
 
-const POPULAR_LIST = [
-  { symbol: "NVDA", name: "NVIDIA" },
-  { symbol: "AAPL", name: "Apple" },
-  { symbol: "MSFT", name: "Microsoft" },
-  { symbol: "AMZN", name: "Amazon" },
-  { symbol: "GOOGL", name: "Alphabet" },
-  { symbol: "TSLA", name: "Tesla" },
-  { symbol: "META", name: "Meta" },
-  { symbol: "JPM", name: "JPMorgan" },
-  { symbol: "LLY", name: "Eli Lilly" },
+interface PopularStockItem {
+  symbol: string
+  name: string
+  sector: string
+}
+
+const POPULAR_LIST: PopularStockItem[] = [
+  { symbol: "NVDA", name: "Nvidia", sector: "Tech" },
+  { symbol: "AAPL", name: "Apple", sector: "Tech" },
+  { symbol: "MSFT", name: "Microsoft", sector: "Tech" },
+  { symbol: "AMZN", name: "Amazon", sector: "Consumer" },
+  { symbol: "GOOGL", name: "Alphabet", sector: "Comm" },
+  { symbol: "META", name: "Meta", sector: "Comm" },
+  { symbol: "TSLA", name: "Tesla", sector: "Consumer" },
+  { symbol: "JPM", name: "JPMorgan", sector: "Finance" },
+  { symbol: "LLY", name: "Eli Lilly", sector: "Health" },
+  { symbol: "XOM", name: "ExxonMobil", sector: "Energy" },
 ]
 
 export const PopularStocks: React.FC<PopularStocksProps> = ({
@@ -23,26 +30,40 @@ export const PopularStocks: React.FC<PopularStocksProps> = ({
   currentSymbol,
 }) => {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-      <div className="flex items-center gap-1 text-xs font-bold text-amber-400 shrink-0 mr-1">
-        <Flame className="h-3.5 w-3.5 fill-amber-400" /> Popular:
+    <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-slate-400 uppercase shrink-0">
+        <Sparkles className="h-3.5 w-3.5 text-bullish animate-pulse" />
+        <span>Market Leaders:</span>
       </div>
+
       <div className="flex items-center gap-2">
         {POPULAR_LIST.map((item) => {
-          const active = currentSymbol === item.symbol
+          const isActive = currentSymbol === item.symbol
+
           return (
             <button
               key={item.symbol}
               type="button"
               onClick={() => onSelectStock(item.symbol)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold border transition shrink-0 flex items-center gap-1.5 ${
-                active
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-secondary/40 border-border/80 text-foreground hover:bg-secondary hover:border-border"
+              className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 shrink-0 border ${
+                isActive
+                  ? "bg-[#111C33] border-bullish/60 text-white shadow-glowEmerald"
+                  : "bg-[#0E1526]/80 border-white/[0.06] text-slate-300 hover:border-white/20 hover:bg-[#131E35]"
               }`}
             >
-              <span>{item.symbol}</span>
-              <span className="text-[10px] opacity-70 font-normal">{item.name}</span>
+              <span
+                className={`font-mono font-bold tracking-tight text-[12px] ${
+                  isActive ? "text-bullish" : "text-white group-hover:text-bullish"
+                }`}
+              >
+                {item.symbol}
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal">
+                {item.name}
+              </span>
+              {isActive && (
+                <span className="h-1.5 w-1.5 rounded-full bg-bullish shadow-[0_0_6px_#00E599]"></span>
+              )}
             </button>
           )
         })}
