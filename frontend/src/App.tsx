@@ -3,7 +3,6 @@ import { ThemeProvider } from "./context/ThemeContext"
 import { StockProvider, useStockContext } from "./context/StockContext"
 import { Header } from "./components/Header"
 import { Sidebar } from "./components/Sidebar"
-import { PopularStocks } from "./components/PopularStocks"
 import { KeyMetrics } from "./components/KeyMetrics"
 import { PriceChart } from "./components/PriceChart"
 import { TechnicalAnalysis } from "./components/TechnicalAnalysis"
@@ -38,9 +37,61 @@ const MainContent: React.FC = () => {
         <Sidebar />
 
         {/* Main Workspace */}
-        <main className="flex-1 p-5 sm:p-6 lg:p-8 space-y-6 overflow-y-auto">
-          {/* Market Leaders Chip Bar */}
-          <PopularStocks />
+        <main className="flex-1 p-5 sm:p-6 lg:p-8 space-y-5 overflow-y-auto">
+          {/* Top Navigation Tabs (Placed above/at the top) */}
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/90 dark:bg-[#0C1322] border border-slate-200/80 dark:border-white/[0.06] overflow-x-auto shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveTab("overview")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
+                activeTab === "overview"
+                  ? "bg-slate-100 dark:bg-[#18243E] text-blue-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <BarChart3 className="h-4 w-4 text-blue-600 dark:text-bullish" />
+              <span>Overview &amp; Action</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("technicals")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
+                activeTab === "technicals"
+                  ? "bg-slate-100 dark:bg-[#18243E] text-blue-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <Activity className="h-4 w-4 text-blue-600 dark:text-cyanAccent" />
+              <span>Technical Indicators</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("forecast")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
+                activeTab === "forecast"
+                  ? "bg-slate-100 dark:bg-[#18243E] text-indigo-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <Cpu className="h-4 w-4 text-indigo-600 dark:text-violetAccent" />
+              <span>Forecasting</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("export")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
+                activeTab === "export"
+                  ? "bg-slate-100 dark:bg-[#18243E] text-amber-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <Download className="h-4 w-4 text-amber-500 dark:text-amberAccent" />
+              <span>Data Export</span>
+            </button>
+          </div>
 
           {loadingDetail && !detail ? (
             <div className="h-96 flex flex-col items-center justify-center gap-3 text-slate-400 bg-white/90 dark:bg-[#0E1526]/40 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-8 shadow-cardLight dark:shadow-terminal">
@@ -55,64 +106,9 @@ const MainContent: React.FC = () => {
               </div>
             </div>
           ) : detail ? (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Bento Grid Main Key Metrics */}
               <KeyMetrics />
-
-              {/* Navigation Tabs */}
-              <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-200/60 dark:bg-[#0C1322] border border-slate-200/80 dark:border-white/[0.06] overflow-x-auto shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("overview")}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                    activeTab === "overview"
-                      ? "bg-white dark:bg-[#18243E] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <BarChart3 className="h-4 w-4 text-blue-600 dark:text-bullish" />
-                  <span>Overview &amp; Action</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("technicals")}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                    activeTab === "technicals"
-                      ? "bg-white dark:bg-[#18243E] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <Activity className="h-4 w-4 text-blue-600 dark:text-cyanAccent" />
-                  <span>Technical Indicators</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("forecast")}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                    activeTab === "forecast"
-                      ? "bg-white dark:bg-[#18243E] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <Cpu className="h-4 w-4 text-indigo-600 dark:text-violetAccent" />
-                  <span>AI Neural Forecast</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("export")}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                    activeTab === "export"
-                      ? "bg-white dark:bg-[#18243E] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <Download className="h-4 w-4 text-amber-500 dark:text-amberAccent" />
-                  <span>Data Export</span>
-                </button>
-              </div>
 
               {/* Dynamic Tab Panes */}
               <div className="transition-opacity duration-200">
@@ -133,7 +129,7 @@ const MainContent: React.FC = () => {
                   S&P 500 Market Terminal
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  Select an index constituent stock from the sidebar or choose from market leaders above to stream real-time price action, algorithmic technical indicators, and deep learning price projections.
+                  Select an index constituent stock from the sidebar to stream real-time price action, algorithmic technical indicators, and price forecasting.
                 </p>
               </div>
               <div className="flex justify-center gap-3 pt-2">

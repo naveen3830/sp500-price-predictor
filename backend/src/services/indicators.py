@@ -90,6 +90,7 @@ def calculateAllIndicators(dataFrame: pd.DataFrame) -> pd.DataFrame:
     result['MACD'] = macdResult['macd']
     result['MACD_Signal'] = macdResult['signal']
     result['MACD_Histogram'] = macdResult['histogram']
+    result['MACD_Hist'] = macdResult['histogram']
 
     bollingerResult = calculateBollingerBands(closePrices)
     result['BB_Upper'] = bollingerResult['upper']

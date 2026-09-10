@@ -7,9 +7,10 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  BarChart,
   Bar,
   ReferenceLine,
+  ComposedChart,
+  Cell,
 } from "recharts"
 import { useTheme } from "../context/ThemeContext"
 import { useStockContext } from "../context/StockContext"
@@ -310,11 +311,14 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
                 <span className="flex items-center gap-1 text-indigo-600 dark:text-violetAccent">
                   <span className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-violetAccent"></span> Signal (9)
                 </span>
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-bullish">
+                  <span className="h-2 w-2 rounded-sm bg-emerald-500 dark:bg-bullish"></span> Histogram
+                </span>
               </div>
-              <span className="text-slate-400 dark:text-slate-500">Histogram Momentum Bars</span>
+              <span className="text-slate-400 dark:text-slate-500">Momentum Waveforms</span>
             </div>
             <ResponsiveContainer width="100%" height="88%">
-              <BarChart data={records} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <ComposedChart data={records} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.04)" : "#E2E8F0"} vertical={false} />
                 <XAxis
                   dataKey="Date"
@@ -332,12 +336,13 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const d = payload[0].payload
+                      const histVal = d.MACD_Histogram ?? d.MACD_Hist ?? 0
                       return (
                         <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
                           <div className="text-slate-400 text-[10px]">{d.Date}</div>
-                          <div>MACD: <span className="font-bold text-blue-600 dark:text-cyanAccent">{d.MACD?.toFixed(2)}</span></div>
-                          <div>Signal: <span className="font-bold text-indigo-600 dark:text-violetAccent">{d.MACD_Signal?.toFixed(2)}</span></div>
-                          <div>Hist: <span className="font-bold text-slate-900 dark:text-white">{d.MACD_Hist?.toFixed(2)}</span></div>
+                          <div>MACD: <span className="font-bold text-blue-600 dark:text-cyanAccent">{d.MACD != null ? d.MACD.toFixed(2) : "N/A"}</span></div>
+                          <div>Signal: <span className="font-bold text-indigo-600 dark:text-violetAccent">{d.MACD_Signal != null ? d.MACD_Signal.toFixed(2) : "N/A"}</span></div>
+                          <div>Hist: <span className={`font-bold ${histVal >= 0 ? "text-emerald-600 dark:text-bullish" : "text-rose-600 dark:text-bearish"}`}>{histVal.toFixed(2)}</span></div>
                         </div>
                       )
                     }
@@ -345,8 +350,19 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
                   }}
                 />
                 <ReferenceLine y={0} stroke={isDark ? "#475569" : "#CBD5E1"} />
-                <Bar dataKey="MACD_Hist" fill={isDark ? "#00E599" : "#059669"} radius={[2, 2, 0, 0]} />
-              </BarChart>
+                <Bar dataKey="MACD_Histogram" radius={[2, 2, 0, 0]} maxBarSize={6}>
+                  {records.map((entry, index) => {
+                    const val = entry.MACD_Histogram ?? entry.MACD_Hist ?? 0
+                    const isPos = val >= 0
+                    const barColor = isDark
+                      ? isPos ? "#00E599" : "#FF385C"
+                      : isPos ? "#059669" : "#DC2626"
+                    return <Cell key={`cell-${index}`} fill={barColor} fillOpacity={0.6} />
+                  })}
+                </Bar>
+                <Line type="monotone" dataKey="MACD" stroke={isDark ? "#00D2FF" : "#2563EB"} strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="MACD_Signal" stroke={isDark ? "#8B5CF6" : "#7C3AED"} strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         )}

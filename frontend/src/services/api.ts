@@ -63,6 +63,7 @@ export interface IndicatorsResponse {
     MACD?: number | null
     MACD_Signal?: number | null
     MACD_Histogram?: number | null
+    MACD_Hist?: number | null
     BB_Upper?: number | null
     BB_Middle?: number | null
     BB_Lower?: number | null
