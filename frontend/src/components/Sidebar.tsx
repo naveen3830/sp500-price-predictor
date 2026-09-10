@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useDeferredValue, useEffect } from "react"
+import React, { useState, useMemo, useCallback } from "react"
 import {
   Search,
   Star,
@@ -13,8 +13,75 @@ import {
   PanelLeftOpen,
 } from "lucide-react"
 import { useStockContext } from "../context/StockContext"
+import { type StockItem } from "../services/api"
 
 const PAGE_SIZE = 10
+
+interface StockCardProps {
+  stock: StockItem
+  isSelected: boolean
+  inWatchlist: boolean
+  onSelect: (symbol: string) => void
+  onToggleWatchlist: (symbol: string) => void
+}
+
+const StockCard: React.FC<StockCardProps> = React.memo(
+  ({ stock, isSelected, inWatchlist, onSelect, onToggleWatchlist }) => {
+    return (
+      <div
+        onClick={() => onSelect(stock.symbol)}
+        className={`group relative flex items-center justify-between p-2 rounded-xl cursor-pointer transition-colors duration-100 border ${
+          isSelected
+            ? "bg-blue-50/90 dark:bg-[#131D33] border-blue-500/40 dark:border-bullish/40 text-slate-900 dark:text-white shadow-sm dark:shadow-lg dark:shadow-black/40"
+            : "bg-transparent border-transparent hover:bg-slate-100/80 dark:hover:bg-[#0D1424] hover:border-slate-200 dark:hover:border-white/[0.05] text-slate-700 dark:text-slate-300"
+        }`}
+      >
+        {/* Active Indicator Bar */}
+        {isSelected && (
+          <div className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600 dark:bg-bullish shadow-[0_0_8px_rgba(37,99,235,0.6)] dark:shadow-[0_0_8px_#00E599]" />
+        )}
+
+        <div className="min-w-0 flex-1 pl-1 pr-2">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`font-mono font-bold text-xs tracking-tight ${
+                isSelected
+                  ? "text-blue-600 dark:text-bullish"
+                  : "text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-bullish"
+              }`}
+            >
+              {stock.symbol}
+            </span>
+            <span className="px-1.5 py-0.2 rounded text-[9px] font-medium tracking-wide uppercase bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.04]">
+              {stock.sector}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-normal">
+            {stock.name}
+          </p>
+        </div>
+
+        {/* Watchlist Toggle */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleWatchlist(stock.symbol)
+          }}
+          className={`p-1.5 rounded-lg transition shrink-0 ${
+            inWatchlist
+              ? "text-amber-500 dark:text-amberAccent hover:bg-amber-100/60 dark:hover:bg-amberAccent/10"
+              : "text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.05]"
+          }`}
+          title={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+        >
+          <Star className={`h-3.5 w-3.5 ${inWatchlist ? "fill-amber-500 dark:fill-amberAccent" : ""}`} />
+        </button>
+      </div>
+    )
+  }
+)
+StockCard.displayName = "StockCard"
 
 export const Sidebar: React.FC = () => {
   const {
@@ -33,10 +100,22 @@ export const Sidebar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  const deferredSearch = useDeferredValue(searchQuery)
+  const handleSelect = useCallback(
+    (symbol: string) => {
+      selectStock(symbol)
+    },
+    [selectStock]
+  )
+
+  const handleToggleWatchlist = useCallback(
+    (symbol: string) => {
+      toggleWatchlist(symbol)
+    },
+    [toggleWatchlist]
+  )
 
   const filteredStocks = useMemo(() => {
-    const query = deferredSearch.trim().toLowerCase()
+    const query = searchQuery.trim().toLowerCase()
     return stocks.filter((stock) => {
       const inCurrentView = activeView === "all" || watchlist.includes(stock.symbol)
       const matchesSector = selectedSector === "All" || stock.sector === selectedSector
@@ -46,23 +125,22 @@ export const Sidebar: React.FC = () => {
         stock.name.toLowerCase().includes(query)
       return inCurrentView && matchesSector && matchesSearch
     })
-  }, [stocks, activeView, watchlist, selectedSector, deferredSearch])
-
-  // Reset pagination to page 1 whenever filters change
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [activeView, selectedSector, deferredSearch])
+  }, [stocks, activeView, watchlist, selectedSector, searchQuery])
 
   const totalPages = Math.max(1, Math.ceil(filteredStocks.length / PAGE_SIZE))
-  const paginatedStocks = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE
-    return filteredStocks.slice(start, start + PAGE_SIZE)
-  }, [filteredStocks, currentPage])
 
-  // Collapsed View
+  // Ensure currentPage doesn't exceed totalPages
+  const validCurrentPage = Math.min(currentPage, totalPages)
+
+  const paginatedStocks = useMemo(() => {
+    const start = (validCurrentPage - 1) * PAGE_SIZE
+    return filteredStocks.slice(start, start + PAGE_SIZE)
+  }, [filteredStocks, validCurrentPage])
+
+  // Collapsed Sidebar View (Rail)
   if (isCollapsed) {
     return (
-      <aside className="w-16 border-r border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#090E1A]/80 backdrop-blur-xl flex flex-col items-center py-4 space-y-4 h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-20 transition-all duration-300">
+      <aside className="w-16 border-r border-slate-200/80 dark:border-white/[0.06] bg-white/95 dark:bg-[#090E1A]/95 flex flex-col items-center py-4 space-y-4 h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-20 transition-[width] duration-200 ease-out will-change-[width]">
         <button
           type="button"
           onClick={() => setIsCollapsed(false)}
@@ -78,6 +156,7 @@ export const Sidebar: React.FC = () => {
           type="button"
           onClick={() => {
             setActiveView("all")
+            setCurrentPage(1)
             setIsCollapsed(false)
           }}
           className={`p-2.5 rounded-xl transition cursor-pointer relative ${
@@ -94,6 +173,7 @@ export const Sidebar: React.FC = () => {
           type="button"
           onClick={() => {
             setActiveView("watchlist")
+            setCurrentPage(1)
             setIsCollapsed(false)
           }}
           className={`p-2.5 rounded-xl transition cursor-pointer relative ${
@@ -123,9 +203,9 @@ export const Sidebar: React.FC = () => {
     )
   }
 
-  // Expanded View
+  // Expanded Sidebar View
   return (
-    <aside className="w-80 border-r border-slate-200/80 dark:border-white/[0.06] bg-white/70 dark:bg-[#090E1A]/60 backdrop-blur-xl flex flex-col h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-10 transition-all duration-300">
+    <aside className="w-80 border-r border-slate-200/80 dark:border-white/[0.06] bg-white/95 dark:bg-[#090E1A]/95 flex flex-col h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-10 transition-[width] duration-200 ease-out will-change-[width]">
       {/* Top Header with Collapse Button & Tabs */}
       <div className="p-3 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/70 dark:bg-[#0C1322]/60 space-y-2">
         <div className="flex items-center justify-between">
@@ -146,8 +226,11 @@ export const Sidebar: React.FC = () => {
         <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-[#080C14] border border-slate-200/80 dark:border-white/[0.05]">
           <button
             type="button"
-            onClick={() => setActiveView("all")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            onClick={() => {
+              setActiveView("all")
+              setCurrentPage(1)
+            }}
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-100 cursor-pointer ${
               activeView === "all"
                 ? "bg-white dark:bg-[#162238] text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -159,8 +242,11 @@ export const Sidebar: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setActiveView("watchlist")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            onClick={() => {
+              setActiveView("watchlist")
+              setCurrentPage(1)
+            }}
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-100 cursor-pointer ${
               activeView === "watchlist"
                 ? "bg-white dark:bg-[#162238] text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -179,8 +265,11 @@ export const Sidebar: React.FC = () => {
         <div className="relative">
           <select
             value={selectedSector}
-            onChange={(e) => setSelectedSector(e.target.value)}
-            className="w-full appearance-none bg-white dark:bg-[#0D1424] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:focus:border-bullish/50 focus:ring-1 focus:ring-blue-500 dark:focus:ring-bullish/50 transition cursor-pointer pr-8 shadow-sm"
+            onChange={(e) => {
+              setSelectedSector(e.target.value)
+              setCurrentPage(1)
+            }}
+            className="w-full appearance-none bg-white dark:bg-[#0D1424] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-1.5 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:focus:border-bullish/50 focus:ring-1 focus:ring-blue-500 dark:focus:ring-bullish/50 transition-colors cursor-pointer pr-8 shadow-sm"
           >
             <option value="All">All Sectors ({sectors.length})</option>
             {sectors.map((sec) => (
@@ -199,14 +288,20 @@ export const Sidebar: React.FC = () => {
             type="text"
             placeholder="Search symbol or company..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white dark:bg-[#0D1424] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-9 pr-8 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-bullish/50 focus:ring-1 focus:ring-blue-500 dark:focus:ring-bullish/50 transition font-sans shadow-sm"
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
+            }}
+            className="w-full bg-white dark:bg-[#0D1424] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-9 pr-8 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-bullish/50 focus:ring-1 focus:ring-blue-500 dark:focus:ring-bullish/50 transition-colors font-sans shadow-sm"
           />
           {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              onClick={() => {
+                setSearchQuery("")
+                setCurrentPage(1)
+              }}
+              className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -230,7 +325,7 @@ export const Sidebar: React.FC = () => {
         )}
       </div>
 
-      {/* Stock Ticker Cards List (Paginated) */}
+      {/* Stock Ticker Cards List (Paginated, Memoized) */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
         {filteredStocks.length === 0 ? (
           <div className="text-center py-12 px-4 space-y-2">
@@ -245,62 +340,16 @@ export const Sidebar: React.FC = () => {
             </p>
           </div>
         ) : (
-          paginatedStocks.map((stock) => {
-            const isSelected = selectedSymbol === stock.symbol
-            const inWatchlist = watchlist.includes(stock.symbol)
-
-            return (
-              <div
-                key={stock.symbol}
-                onClick={() => selectStock(stock.symbol)}
-                className={`group relative flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all duration-150 border ${
-                  isSelected
-                    ? "bg-blue-50/90 dark:bg-[#131D33] border-blue-500/40 dark:border-bullish/40 text-slate-900 dark:text-white shadow-sm dark:shadow-lg dark:shadow-black/40"
-                    : "bg-transparent border-transparent hover:bg-slate-100/80 dark:hover:bg-[#0D1424] hover:border-slate-200 dark:hover:border-white/[0.05] text-slate-700 dark:text-slate-300"
-                }`}
-              >
-                {/* Active Indicator Bar */}
-                {isSelected && (
-                  <div className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600 dark:bg-bullish shadow-[0_0_8px_rgba(37,99,235,0.6)] dark:shadow-[0_0_8px_#00E599]"></div>
-                )}
-
-                <div className="min-w-0 flex-1 pl-1 pr-2">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`font-mono font-bold text-xs tracking-tight ${
-                        isSelected ? "text-blue-600 dark:text-bullish" : "text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-bullish"
-                      }`}
-                    >
-                      {stock.symbol}
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-medium tracking-wide uppercase bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.04]">
-                      {stock.sector}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-normal">
-                    {stock.name}
-                  </p>
-                </div>
-
-                {/* Watchlist Toggle */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleWatchlist(stock.symbol)
-                  }}
-                  className={`p-1.5 rounded-lg transition shrink-0 ${
-                    inWatchlist
-                      ? "text-amber-500 dark:text-amberAccent hover:bg-amber-100/60 dark:hover:bg-amberAccent/10"
-                      : "text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.05]"
-                  }`}
-                  title={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
-                >
-                  <Star className={`h-3.5 w-3.5 ${inWatchlist ? "fill-amber-500 dark:fill-amberAccent" : ""}`} />
-                </button>
-              </div>
-            )
-          })
+          paginatedStocks.map((stock) => (
+            <StockCard
+              key={stock.symbol}
+              stock={stock}
+              isSelected={selectedSymbol === stock.symbol}
+              inWatchlist={watchlist.includes(stock.symbol)}
+              onSelect={handleSelect}
+              onToggleWatchlist={handleToggleWatchlist}
+            />
+          ))
         )}
       </div>
 
@@ -308,14 +357,14 @@ export const Sidebar: React.FC = () => {
       {filteredStocks.length > 0 && (
         <div className="p-2.5 border-t border-slate-200/80 dark:border-white/[0.06] bg-slate-50/70 dark:bg-[#0C1322]/60 flex items-center justify-between text-xs">
           <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-            {Math.min((currentPage - 1) * PAGE_SIZE + 1, filteredStocks.length)}–
-            {Math.min(currentPage * PAGE_SIZE, filteredStocks.length)} of {filteredStocks.length}
+            {Math.min((validCurrentPage - 1) * PAGE_SIZE + 1, filteredStocks.length)}–
+            {Math.min(validCurrentPage * PAGE_SIZE, filteredStocks.length)} of {filteredStocks.length}
           </div>
 
           <div className="flex items-center gap-1">
             <button
               type="button"
-              disabled={currentPage === 1}
+              disabled={validCurrentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className="p-1 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#131D33] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#18243E] disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
               title="Previous Page"
@@ -324,12 +373,12 @@ export const Sidebar: React.FC = () => {
             </button>
 
             <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 px-1 font-semibold">
-              {currentPage}/{totalPages}
+              {validCurrentPage}/{totalPages}
             </span>
 
             <button
               type="button"
-              disabled={currentPage === totalPages}
+              disabled={validCurrentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               className="p-1 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#131D33] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#18243E] disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
               title="Next Page"

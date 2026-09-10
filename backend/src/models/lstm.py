@@ -11,7 +11,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import warnings
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM, Dropout
+from tensorflow.keras.layers import Dense, LSTM, Dropout, Input
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,8 @@ def validateData(data: pd.DataFrame) -> Tuple[bool, str]:
 
 def buildLstmModel(inputShape: Tuple[int, int], units: int = 50, dropoutRate: float = 0.2) -> Sequential:
     model = Sequential([
-        LSTM(units=units, return_sequences=True, input_shape=inputShape),
+        Input(shape=inputShape),
+        LSTM(units=units, return_sequences=True),
         Dropout(dropoutRate),
         LSTM(units=units, return_sequences=False),
         Dropout(dropoutRate),
