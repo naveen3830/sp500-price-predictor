@@ -41,6 +41,12 @@ STOCK_DATABASE = {
     "ORCL": {"name": "Oracle Corporation", "sector": "Technology"},
     "QCOM": {"name": "Qualcomm Inc.", "sector": "Technology"},
     "IBM": {"name": "IBM Corporation", "sector": "Technology"},
+    "NOW": {"name": "ServiceNow Inc.", "sector": "Technology"},
+    "ACN": {"name": "Accenture plc", "sector": "Technology"},
+    "PANW": {"name": "Palo Alto Networks", "sector": "Technology"},
+    "AMAT": {"name": "Applied Materials Inc.", "sector": "Technology"},
+    "INTU": {"name": "Intuit Inc.", "sector": "Technology"},
+    "MU": {"name": "Micron Technology Inc.", "sector": "Technology"},
     
     # Finance
     "JPM": {"name": "JPMorgan Chase & Co.", "sector": "Finance"},
@@ -55,6 +61,10 @@ STOCK_DATABASE = {
     "MA": {"name": "Mastercard Inc.", "sector": "Finance"},
     "AXP": {"name": "American Express Co.", "sector": "Finance"},
     "BRK.B": {"name": "Berkshire Hathaway Inc.", "sector": "Finance"},
+    "SPGI": {"name": "S&P Global Inc.", "sector": "Finance"},
+    "CB": {"name": "Chubb Limited", "sector": "Finance"},
+    "MMC": {"name": "Marsh & McLennan Companies", "sector": "Finance"},
+    "PGR": {"name": "Progressive Corporation", "sector": "Finance"},
     
     # Healthcare
     "JNJ": {"name": "Johnson & Johnson", "sector": "Healthcare"},
@@ -67,6 +77,11 @@ STOCK_DATABASE = {
     "LLY": {"name": "Eli Lilly and Company", "sector": "Healthcare"},
     "BMY": {"name": "Bristol-Myers Squibb", "sector": "Healthcare"},
     "AMGN": {"name": "Amgen Inc.", "sector": "Healthcare"},
+    "ISRG": {"name": "Intuitive Surgical Inc.", "sector": "Healthcare"},
+    "MDT": {"name": "Medtronic plc", "sector": "Healthcare"},
+    "DHR": {"name": "Danaher Corporation", "sector": "Healthcare"},
+    "CVS": {"name": "CVS Health Corporation", "sector": "Healthcare"},
+    "GILD": {"name": "Gilead Sciences Inc.", "sector": "Healthcare"},
     
     # Consumer
     "WMT": {"name": "Walmart Inc.", "sector": "Consumer"},
@@ -80,6 +95,11 @@ STOCK_DATABASE = {
     "SBUX": {"name": "Starbucks Corporation", "sector": "Consumer"},
     "DIS": {"name": "Walt Disney Company", "sector": "Consumer"},
     "CMCSA": {"name": "Comcast Corporation", "sector": "Consumer"},
+    "TGT": {"name": "Target Corporation", "sector": "Consumer"},
+    "LOW": {"name": "Lowe's Companies Inc.", "sector": "Consumer"},
+    "TJX": {"name": "TJX Companies Inc.", "sector": "Consumer"},
+    "MDLZ": {"name": "Mondelez International", "sector": "Consumer"},
+    "BKNG": {"name": "Booking Holdings Inc.", "sector": "Consumer"},
     
     # Energy
     "XOM": {"name": "Exxon Mobil Corporation", "sector": "Energy"},
@@ -87,6 +107,11 @@ STOCK_DATABASE = {
     "COP": {"name": "ConocoPhillips", "sector": "Energy"},
     "SLB": {"name": "Schlumberger Limited", "sector": "Energy"},
     "EOG": {"name": "EOG Resources Inc.", "sector": "Energy"},
+    "MPC": {"name": "Marathon Petroleum Corp.", "sector": "Energy"},
+    "VLO": {"name": "Valero Energy Corp.", "sector": "Energy"},
+    "PSX": {"name": "Phillips 66", "sector": "Energy"},
+    "OXY": {"name": "Occidental Petroleum", "sector": "Energy"},
+    "HAL": {"name": "Halliburton Company", "sector": "Energy"},
     
     # Industrial
     "BA": {"name": "Boeing Company", "sector": "Industrial"},
@@ -97,26 +122,44 @@ STOCK_DATABASE = {
     "MMM": {"name": "3M Company", "sector": "Industrial"},
     "LMT": {"name": "Lockheed Martin Corp.", "sector": "Industrial"},
     "RTX": {"name": "Raytheon Technologies", "sector": "Industrial"},
+    "DE": {"name": "Deere & Company", "sector": "Industrial"},
+    "UNP": {"name": "Union Pacific Corporation", "sector": "Industrial"},
+    "ETN": {"name": "Eaton Corporation", "sector": "Industrial"},
+    "WM": {"name": "Waste Management Inc.", "sector": "Industrial"},
     
     # Telecom
     "VZ": {"name": "Verizon Communications", "sector": "Telecom"},
     "T": {"name": "AT&T Inc.", "sector": "Telecom"},
     "TMUS": {"name": "T-Mobile US Inc.", "sector": "Telecom"},
+    "NFLX": {"name": "Netflix Inc.", "sector": "Telecom"},
+    "WBD": {"name": "Warner Bros. Discovery", "sector": "Telecom"},
     
     # Real Estate
     "AMT": {"name": "American Tower Corp.", "sector": "Real Estate"},
     "PLD": {"name": "Prologis Inc.", "sector": "Real Estate"},
     "CCI": {"name": "Crown Castle Inc.", "sector": "Real Estate"},
+    "SPG": {"name": "Simon Property Group", "sector": "Real Estate"},
+    "EQIX": {"name": "Equinix Inc.", "sector": "Real Estate"},
+    "PSA": {"name": "Public Storage", "sector": "Real Estate"},
+    "O": {"name": "Realty Income Corporation", "sector": "Real Estate"},
     
     # Utilities
     "NEE": {"name": "NextEra Energy Inc.", "sector": "Utilities"},
     "DUK": {"name": "Duke Energy Corp.", "sector": "Utilities"},
     "SO": {"name": "Southern Company", "sector": "Utilities"},
+    "AEP": {"name": "American Electric Power", "sector": "Utilities"},
+    "SRE": {"name": "Sempra", "sector": "Utilities"},
+    "EXC": {"name": "Exelon Corporation", "sector": "Utilities"},
+    "XEL": {"name": "Xcel Energy Inc.", "sector": "Utilities"},
     
     # Materials
     "LIN": {"name": "Linde plc", "sector": "Materials"},
     "APD": {"name": "Air Products & Chemicals", "sector": "Materials"},
     "SHW": {"name": "Sherwin-Williams Co.", "sector": "Materials"},
+    "ECL": {"name": "Ecolab Inc.", "sector": "Materials"},
+    "FCX": {"name": "Freeport-McMoRan Inc.", "sector": "Materials"},
+    "NEM": {"name": "Newmont Corporation", "sector": "Materials"},
+    "CTVA": {"name": "Corteva Inc.", "sector": "Materials"},
 }
 
 
@@ -467,3 +510,10 @@ def is_in_watchlist(symbol: str) -> bool:
     """Check if a stock is in the watchlist."""
     init_watchlist()
     return symbol in st.session_state.watchlist
+
+
+def clear_watchlist():
+    """Clear all stocks from the watchlist."""
+    init_watchlist()
+    st.session_state.watchlist = []
+

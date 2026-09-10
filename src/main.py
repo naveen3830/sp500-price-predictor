@@ -1,8 +1,9 @@
 """
-AI Stock Predictor
-==================
+S&P 500 Price Predictor
+=======================
 A modern, feature-rich stock analysis and prediction application
-with interactive charts, technical indicators, and AI-powered forecasting.
+for S&P 500 companies with interactive charts, technical indicators,
+and AI-powered forecasting.
 
 DISCLAIMER: This application is for educational purposes only.
 It is not financial advice. Always consult a qualified financial
@@ -23,7 +24,12 @@ logger = get_logger(__name__)
 # Import custom modules
 from styles import get_theme_css, render_header, render_stock_badge, render_price_display, render_indicator_signal, render_section_header, get_plotly_theme
 from charts import create_candlestick_chart, create_indicator_chart, create_prediction_chart, create_comparison_chart, add_moving_averages, add_bollinger_bands, create_volume_analysis_chart
-from stock_data import STOCK_DATABASE, get_all_sectors, get_stocks_by_sector, get_stock_info, load_stock_data, load_multiple_stocks, get_current_price_info, calculate_returns, add_to_watchlist, remove_from_watchlist, get_watchlist, is_in_watchlist, extract_symbol_from_display
+from stock_data import (
+    STOCK_DATABASE, get_all_sectors, get_stocks_by_sector, get_stock_info,
+    load_stock_data, load_multiple_stocks, get_current_price_info, calculate_returns,
+    add_to_watchlist, remove_from_watchlist, clear_watchlist, get_watchlist,
+    is_in_watchlist, extract_symbol_from_display
+)
 from models.indicators import calculate_all_indicators, get_indicator_summary
 from models import lstm
 
@@ -35,7 +41,7 @@ TODAY = date.today().strftime("%Y-%m-%d")
 
 # Page Configuration
 st.set_page_config(
-    page_title="AI Stock Predictor",
+    page_title="S&P 500 Price Predictor",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -67,10 +73,20 @@ with st.sidebar:
     stock_options = [f"{info['name']} ({symbol})" for symbol, info in sorted(filtered_stocks.items())]
     
     if stock_options:
+        # Match current selected symbol if already set
+        current_index = 0
+        if st.session_state.selected_symbol:
+            target_sym = st.session_state.selected_symbol
+            for idx, opt in enumerate(stock_options):
+                if f"({target_sym})" in opt:
+                    current_index = idx + 1
+                    break
+
         selected_stock = st.selectbox(
             "Select Stock",
             options=[""] + stock_options,
-            help="Choose a stock to analyze"
+            index=current_index,
+            help="Choose an S&P 500 stock to analyze"
         )
         
         if selected_stock:
@@ -81,30 +97,40 @@ with st.sidebar:
     st.markdown("---")
     
     # Watchlist
-    st.markdown("## Watchlist")
     watchlist = get_watchlist()
+    wl_header_col1, wl_header_col2 = st.columns([3, 1])
+    with wl_header_col1:
+        st.markdown(f"## Watchlist ({len(watchlist)})")
+    with wl_header_col2:
+        if watchlist:
+            if st.button("Clear", key="clear_watchlist_btn", help="Clear all stocks from watchlist"):
+                clear_watchlist()
+                st.rerun()
     
     if watchlist:
         for symbol in watchlist:
             col1, col2 = st.columns([4, 1])
             with col1:
                 info = get_stock_info(symbol)
-                if info:
-                    st.markdown(f"**{symbol}** - {info['name'][:20]}...")
+                sec_tag = f" • {info['sector']}" if info and 'sector' in info else ""
+                btn_label = f"📌 {symbol}{sec_tag}"
+                if st.button(btn_label, key=f"wl_select_{symbol}", help=f"Analyze {info['name'] if info else symbol}", use_container_width=True):
+                    st.session_state.selected_symbol = symbol
+                    st.rerun()
             with col2:
-                if st.button("✕", key=f"remove_{symbol}"):
+                if st.button("✕", key=f"remove_{symbol}", help=f"Remove {symbol} from watchlist"):
                     remove_from_watchlist(symbol)
                     st.rerun()
     else:
-        st.caption("No stocks in watchlist")
+        st.caption("No stocks in watchlist. Use ⭐ button to save favorites.")
 
 
 # ============== MAIN CONTENT ==============
 # Header
 st.markdown(
     render_header(
-        "AI Stock Predictor",
-        "Advanced Stock Analysis & Forecasting"
+        "S&P 500 Price Predictor",
+        "Advanced Stock Analysis & AI Forecasting"
     ),
     unsafe_allow_html=True
 )
@@ -442,49 +468,137 @@ if st.session_state.selected_symbol:
                 st.markdown(f"Export {len(data)} rows of historical OHLCV data")
                 
                 csv_data = data.to_csv(index=False)
-                st.download_button(
-                    label="📥 Download Historical Data (CSV)",
-                    data=csv_data,
-                    file_name=f"{symbol}_historical_data.csv",
-                    mime="text/csv"
-                )
+                json_data = data.to_json(orient="records", date_format="iso")
+                
+                btn_c1, btn_c2 = st.columns(2)
+                with btn_c1:
+                    st.download_button(
+                        label="📥 Download CSV",
+                        data=csv_data,
+                        file_name=f"{symbol}_historical_data.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                with btn_c2:
+                    st.download_button(
+                        label="📥 Download JSON",
+                        data=json_data,
+                        file_name=f"{symbol}_historical_data.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
             
             with export_col2:
                 st.markdown("### Data with Indicators")
-                st.markdown("Export data with all calculated technical indicators")
+                st.markdown("Export data with all calculated technical indicators (SMA, EMA, RSI, MACD, etc.)")
                 
                 csv_indicators = data_with_indicators.to_csv(index=False)
-                st.download_button(
-                    label="📥 Download with Indicators (CSV)",
-                    data=csv_indicators,
-                    file_name=f"{symbol}_with_indicators.csv",
-                    mime="text/csv"
-                )
+                json_indicators = data_with_indicators.to_json(orient="records", date_format="iso")
+                
+                btn_ind1, btn_ind2 = st.columns(2)
+                with btn_ind1:
+                    st.download_button(
+                        label="📥 Download CSV",
+                        data=csv_indicators,
+                        file_name=f"{symbol}_with_indicators.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                with btn_ind2:
+                    st.download_button(
+                        label="📥 Download JSON",
+                        data=json_indicators,
+                        file_name=f"{symbol}_with_indicators.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
             
-            # Forecast export
-            if st.session_state.get('future_predictions') is not None:
-                st.markdown("### Forecast Data")
-                forecast_df = lstm.create_prediction_dataframe(
-                    st.session_state.future_dates,
-                    st.session_state.future_predictions,
-                    0.95,
-                    historical_errors=st.session_state.get('historical_errors')
-                )
-                csv_forecast = forecast_df.to_csv(index=False)
-                st.download_button(
-                    label="Download Forecast (CSV)",
-                    data=csv_forecast,
-                    file_name=f"{symbol}_forecast.csv",
-                    mime="text/csv"
-                )
+            st.markdown("---")
+            summary_col, forecast_col = st.columns(2)
+            
+            with summary_col:
+                st.markdown("### Summary & Key Metrics")
+                st.markdown("Export current metrics, returns, and indicator signals snapshot")
+                
+                # Build summary snapshot dictionary
+                snapshot_records = []
+                if price_info:
+                    snapshot_records.append({"Metric": "Current Price", "Value": f"${price_info['current_price']:.2f}"})
+                    snapshot_records.append({"Metric": "Daily Change", "Value": f"{price_info['change']:+.2f} ({price_info['change_pct']:+.2f}%)"})
+                    snapshot_records.append({"Metric": "52W High", "Value": f"${price_info['high_52w']:.2f}"})
+                    snapshot_records.append({"Metric": "52W Low", "Value": f"${price_info['low_52w']:.2f}"})
+                    snapshot_records.append({"Metric": "Average Volume", "Value": f"{price_info['avg_volume']:,.0f}"})
+                if returns:
+                    for period, ret in returns.items():
+                        snapshot_records.append({"Metric": f"Return ({period})", "Value": f"{ret:+.2f}%"})
+                if indicator_summary:
+                    if 'rsi' in indicator_summary:
+                        snapshot_records.append({"Metric": "RSI (14)", "Value": f"{indicator_summary['rsi'].get('value', 0):.2f} ({indicator_summary['rsi'].get('signal', 'N/A')})"})
+                    if 'macd' in indicator_summary:
+                        snapshot_records.append({"Metric": "MACD Signal", "Value": indicator_summary['macd'].get('signal', 'N/A')})
+                
+                summary_df = pd.DataFrame(snapshot_records)
+                csv_summary = summary_df.to_csv(index=False)
+                json_summary = summary_df.to_json(orient="records")
+                
+                sum_c1, sum_c2 = st.columns(2)
+                with sum_c1:
+                    st.download_button(
+                        label="📥 Download Summary (CSV)",
+                        data=csv_summary,
+                        file_name=f"{symbol}_summary_snapshot.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                with sum_c2:
+                    st.download_button(
+                        label="📥 Download Summary (JSON)",
+                        data=json_summary,
+                        file_name=f"{symbol}_summary_snapshot.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
+            
+            with forecast_col:
+                st.markdown("### AI Forecast Data")
+                if st.session_state.get('future_predictions') is not None:
+                    st.markdown("Export multi-day forward price forecasts with confidence intervals")
+                    forecast_df = lstm.create_prediction_dataframe(
+                        st.session_state.future_dates,
+                        st.session_state.future_predictions,
+                        0.95,
+                        historical_errors=st.session_state.get('historical_errors')
+                    )
+                    csv_forecast = forecast_df.to_csv(index=False)
+                    json_forecast = forecast_df.to_json(orient="records", date_format="iso")
+                    
+                    fc_c1, fc_c2 = st.columns(2)
+                    with fc_c1:
+                        st.download_button(
+                            label="📥 Download Forecast (CSV)",
+                            data=csv_forecast,
+                            file_name=f"{symbol}_forecast.csv",
+                            mime="text/csv",
+                            use_container_width=True
+                        )
+                    with fc_c2:
+                        st.download_button(
+                            label="📥 Download Forecast (JSON)",
+                            data=json_forecast,
+                            file_name=f"{symbol}_forecast.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                else:
+                    st.info("Train the AI model in the **AI Forecast** tab to enable forecast data export.")
 
 else:
     # No stock selected - show welcome message
     st.markdown("""
     <div class="glass-card" style="text-align: center; padding: 3rem;">
-        <h2>Welcome to the S&P 500 Stock Predictor! 🚀</h2>
+        <h2>Welcome to the S&P 500 Price Predictor! 🚀</h2>
         <p style="font-size: 1.1rem; color: #888;">
-            Select a stock from the sidebar to get started with advanced analysis and AI-powered forecasting.
+            Select an S&P 500 stock from the sidebar or popular picks below to get started with advanced analysis and AI-powered forecasting.
         </p>
         <div style="margin-top: 2rem;">
             <h3>Features:</h3>
@@ -493,7 +607,7 @@ else:
                 <li>📊 Technical Indicators (RSI, MACD, Bollinger Bands)</li>
                 <li>🔮 AI-Powered Price Forecasting</li>
                 <li>📉 Multi-Stock Comparison</li>
-                <li>📥 Data Export to CSV</li>
+                <li>📥 Data Export to CSV & JSON</li>
             </ul>
         </div>
     </div>

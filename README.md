@@ -1,11 +1,20 @@
 
-# Stock Price Prediction with ARIMA and LSTM Models
+# S&P 500 Price Predictor
 
-This project demonstrates the use of traditional time series models (ARIMA) and deep learning models (LSTM) for predicting stock prices. It integrates data preprocessing, model training, and deployment into a user-friendly Streamlit web application.
+An interactive stock analysis and price forecasting application built for the S&P 500 index. Powered by Streamlit, deep learning (LSTM), and traditional time series models (ARIMA), this platform provides real-time market data, technical indicator analysis, customizable watchlists, and AI-driven future price projections.
+
+## Key Features
+
+- **Broad S&P 500 Coverage**: Tickers organized across all 11 market sectors (Technology, Finance, Healthcare, Consumer, Energy, Industrial, Telecom, Real Estate, Utilities, Materials).
+- **Interactive Technical Analysis**: Candlestick charts, moving averages (SMA/EMA), Bollinger Bands, RSI, and MACD indicators.
+- **AI Forecasting**: Long Short-Term Memory (LSTM) neural networks trained on historical price sequences for multi-day forward projections with confidence intervals.
+- **Interactive Watchlist**: Quick-access watchlist sidebar with sector badges, one-click symbol loading, and list management.
+- **Flexible Data Export**: Download historical OHLCV data, calculated technical indicators, and price forecasts in CSV or JSON format.
 
 ## Project Workflow
 
 ### 1. Data Preprocessing
+- Historical data retrieved via Yahoo Finance (`yfinance`).
 - Data normalized using `MinMaxScaler`.
 - Sliding window of 60 days used to create input-output sequences for LSTM.
 - Stationarity achieved using differencing for ARIMA.
@@ -13,34 +22,26 @@ This project demonstrates the use of traditional time series models (ARIMA) and 
 ### 2. Modeling Approaches
 - **ARIMA**:
   - Hyperparameter selection via MINIC and ESACF methods.
-  - Focused on short-term accuracy but struggled with non-linear patterns.
+  - Focused on short-term accuracy for linear patterns.
 - **LSTM**:
-  - Two LSTM layers with dense layers for output.
-  - Used Adam optimizer and Mean Squared Error (MSE) loss.
-  - Outperformed ARIMA in both short-term and long-term forecasting.
+  - Multi-layer LSTM architecture with dropout regularization and dense output layers.
+  - Optimized with Adam optimizer and Mean Squared Error (MSE) loss.
+  - Captures non-linear trends and multi-day volatility.
 
 ### 3. Deployment
-- Deployed on a Streamlit web app for interactive stock selection and prediction visualization.
+- Interactive web application deployed with Streamlit and Plotly.
 
-##  Challenges and Solutions
-- **ARIMA**:
-  - Required data stationarity through extensive preprocessing.
-  - Manual hyperparameter tuning using grid search and AIC.
-- **LSTM**:
-  - Overfitting resolved by adding dropout layers.
-  - Computationally intensive, requiring significant hardware.
-
-##  Results
+## Results
 - **Metrics**:
   - LSTM: MAE = 2.34, MSE = 8.92, R² = 0.87.
-- LSTM outperformed ARIMA, excelling in capturing non-linear trends and volatility.
+- LSTM effectively models non-linear price trends and volatility across S&P 500 constituents.
 
 ## How to Run
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your_username/your_project.git
-   cd your_project
+   git clone https://github.com/naveen3830/ai_stock_prediction.git
+   cd ai_stock_prediction
    ```
 2. Install dependencies:
    ```bash
@@ -48,11 +49,11 @@ This project demonstrates the use of traditional time series models (ARIMA) and 
    ```
 3. Run the Streamlit app:
    ```bash
-   streamlit run app.py
+   streamlit run src/main.py
    ```
 
 ## Future Directions
-- Incorporate external factors like macroeconomic indicators and sentiment analysis.
-- Explore advanced models (e.g., Transformers) for improved predictions.
-- Combine ARIMA and LSTM in hybrid models.
+- Incorporate external factors like macroeconomic indicators and financial news sentiment.
+- Explore Transformer-based architectures (e.g., Temporal Fusion Transformers).
+- Combine ARIMA and LSTM into automated hybrid ensembles.
  
