@@ -18,26 +18,31 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         bullish: {
+          light: "#059669",
           DEFAULT: "#00E599",
           muted: "rgba(0, 229, 153, 0.12)",
           border: "rgba(0, 229, 153, 0.25)",
         },
         bearish: {
+          light: "#DC2626",
           DEFAULT: "#FF385C",
           muted: "rgba(255, 56, 92, 0.12)",
           border: "rgba(255, 56, 92, 0.25)",
         },
         cyanAccent: {
+          light: "#0284C7",
           DEFAULT: "#00D2FF",
           muted: "rgba(0, 210, 255, 0.12)",
           border: "rgba(0, 210, 255, 0.25)",
         },
         violetAccent: {
+          light: "#7C3AED",
           DEFAULT: "#8B5CF6",
           muted: "rgba(139, 92, 246, 0.12)",
           border: "rgba(139, 92, 246, 0.25)",
         },
         amberAccent: {
+          light: "#D97706",
           DEFAULT: "#FFB020",
           muted: "rgba(255, 176, 32, 0.12)",
           border: "rgba(255, 176, 32, 0.25)",
@@ -49,6 +54,13 @@ export default {
           cardHover: "#151F35",
           border: "rgba(255, 255, 255, 0.08)",
           subtle: "rgba(255, 255, 255, 0.04)",
+        },
+        lightAmbient: {
+          bg: "#F0F4FA",
+          card: "#FFFFFF",
+          cardHover: "#F8FAFC",
+          panel: "#F1F5F9",
+          border: "#E2E8F0",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -86,6 +98,7 @@ export default {
         glowCyan: "0 0 25px -5px rgba(0, 210, 255, 0.25)",
         glowViolet: "0 0 25px -5px rgba(139, 92, 246, 0.25)",
         terminal: "0 20px 40px -15px rgba(0, 0, 0, 0.7)",
+        cardLight: "0 4px 20px -2px rgba(15, 23, 42, 0.05)",
       },
     },
   },

@@ -1,111 +1,105 @@
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useDeferredValue } from "react"
 import { Search, Star, Trash2, X, Bookmark, Layers, Filter } from "lucide-react"
-import type { StockItem } from "../services/api"
+import { useStockContext } from "../context/StockContext"
 
-interface SidebarProps {
-  stocks: StockItem[]
-  sectors: string[]
-  selectedSymbol: string | null
-  onSelectStock: (symbol: string) => void
-  watchlist: string[]
-  onToggleWatchlist: (symbol: string) => void
-  onClearWatchlist: () => void
-}
+export const Sidebar: React.FC = () => {
+  const {
+    stocks,
+    sectors,
+    selectedSymbol,
+    selectStock,
+    watchlist,
+    toggleWatchlist,
+    clearWatchlist,
+  } = useStockContext()
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  stocks,
-  sectors,
-  selectedSymbol,
-  onSelectStock,
-  watchlist,
-  onToggleWatchlist,
-  onClearWatchlist,
-}) => {
   const [activeView, setActiveView] = useState<"all" | "watchlist">("all")
   const [selectedSector, setSelectedSector] = useState<string>("All")
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const deferredSearch = useDeferredValue(searchQuery)
 
   const filteredStocks = useMemo(() => {
+    const query = deferredSearch.trim().toLowerCase()
     return stocks.filter((stock) => {
       const inCurrentView = activeView === "all" || watchlist.includes(stock.symbol)
       const matchesSector = selectedSector === "All" || stock.sector === selectedSector
       const matchesSearch =
-        searchQuery === "" ||
-        stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+        query === "" ||
+        stock.symbol.toLowerCase().includes(query) ||
+        stock.name.toLowerCase().includes(query)
       return inCurrentView && matchesSector && matchesSearch
     })
-  }, [stocks, activeView, watchlist, selectedSector, searchQuery])
+  }, [stocks, activeView, watchlist, selectedSector, deferredSearch])
 
   return (
-    <aside className="w-80 border-r border-white/[0.06] bg-[#090E1A]/60 backdrop-blur-xl flex flex-col h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-10">
+    <aside className="w-80 border-r border-slate-200/80 dark:border-white/[0.06] bg-white/70 dark:bg-[#090E1A]/60 backdrop-blur-xl flex flex-col h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-10 transition-colors duration-200">
       {/* Navigation Tabs (Constituents vs Watchlist) */}
-      <div className="p-3 border-b border-white/[0.06] bg-[#0C1322]/60">
-        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#080C14] border border-white/[0.05]">
+      <div className="p-3 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/70 dark:bg-[#0C1322]/60">
+        <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-200/60 dark:bg-[#080C14] border border-slate-200/80 dark:border-white/[0.05]">
           <button
             type="button"
             onClick={() => setActiveView("all")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
               activeView === "all"
-                ? "bg-[#162238] text-white shadow-sm border border-white/10"
-                : "text-slate-400 hover:text-white"
+                ? "bg-white dark:bg-[#162238] text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Layers className="h-3.5 w-3.5 text-bullish" />
+            <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-bullish" />
             <span>S&P 500</span>
-            <span className="font-mono text-[10px] text-slate-400">({stocks.length})</span>
+            <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">({stocks.length})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveView("watchlist")}
-            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer ${
               activeView === "watchlist"
-                ? "bg-[#162238] text-white shadow-sm border border-white/10"
-                : "text-slate-400 hover:text-white"
+                ? "bg-white dark:bg-[#162238] text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-white/10"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <Bookmark className="h-3.5 w-3.5 text-amberAccent" />
+            <Bookmark className="h-3.5 w-3.5 text-amber-500 dark:text-amberAccent" />
             <span>Watchlist</span>
-            <span className="font-mono text-[10px] text-slate-400">({watchlist.length})</span>
+            <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">({watchlist.length})</span>
           </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3 border-b border-white/[0.06] space-y-2.5 bg-[#0A101E]/40">
+      <div className="p-3 border-b border-slate-200/80 dark:border-white/[0.06] space-y-2.5 bg-slate-50/40 dark:bg-[#0A101E]/40">
         {/* Sector Select */}
         <div className="relative">
           <select
             value={selectedSector}
             onChange={(e) => setSelectedSector(e.target.value)}
-            className="w-full appearance-none bg-[#0D1424] border border-white/[0.08] rounded-xl px-3 py-2 text-xs font-medium text-slate-200 focus:outline-none focus:border-bullish/50 focus:ring-1 focus:ring-bullish/50 transition cursor-pointer pr-8"
+            className="w-full appearance-none bg-white dark:bg-[#0D1424] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:focus:border-bullish/50 focus:ring-1 focus:ring-blue-500 dark:focus:ring-bullish/50 transition cursor-pointer pr-8 shadow-sm"
           >
             <option value="All">All Sectors ({sectors.length})</option>
             {sectors.map((sec) => (
-              <option key={sec} value={sec} className="bg-[#0D1424] text-slate-200">
+              <option key={sec} value={sec} className="bg-white dark:bg-[#0D1424] text-slate-800 dark:text-slate-200">
                 {sec}
               </option>
             ))}
           </select>
-          <Filter className="absolute right-3 top-2.5 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
+          <Filter className="absolute right-3 top-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
         </div>
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search ticker or name..."
+            placeholder="Search ticker or company..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0D1424] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-bullish/50 focus:ring-1 focus:ring-bullish/50 transition font-sans"
+            className="w-full bg-white dark:bg-[#0D1424] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-bullish/50 focus:ring-1 focus:ring-blue-500 dark:focus:ring-bullish/50 transition font-sans shadow-sm"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-2.5 text-slate-500 hover:text-white"
+              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -115,13 +109,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Watchlist Clear Button in Watchlist View */}
         {activeView === "watchlist" && watchlist.length > 0 && (
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] font-mono text-slate-400">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
               {watchlist.length} Saved {watchlist.length === 1 ? "Stock" : "Stocks"}
             </span>
             <button
               type="button"
-              onClick={onClearWatchlist}
-              className="flex items-center gap-1 text-[11px] text-bearish/90 hover:text-bearish font-medium transition cursor-pointer"
+              onClick={clearWatchlist}
+              className="flex items-center gap-1 text-[11px] text-rose-600 dark:text-bearish/90 hover:text-rose-700 dark:hover:text-bearish font-medium transition cursor-pointer"
             >
               <Trash2 className="h-3 w-3" /> Clear All
             </button>
@@ -133,10 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
         {filteredStocks.length === 0 ? (
           <div className="text-center py-12 px-4 space-y-2">
-            <div className="h-10 w-10 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center justify-center mx-auto text-slate-500">
+            <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] flex items-center justify-center mx-auto text-slate-400">
               <Search className="h-4 w-4" />
             </div>
-            <p className="text-xs font-semibold text-slate-400">No stocks found</p>
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-400">No stocks found</p>
             <p className="text-[11px] text-slate-500">
               {activeView === "watchlist"
                 ? "Add stocks to your watchlist using the star icon."
@@ -151,32 +145,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div
                 key={stock.symbol}
-                onClick={() => onSelectStock(stock.symbol)}
+                onClick={() => selectStock(stock.symbol)}
                 className={`group relative flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all duration-150 border ${
                   isSelected
-                    ? "bg-[#131D33] border-bullish/40 text-white shadow-lg shadow-black/40"
-                    : "bg-transparent border-transparent hover:bg-[#0D1424] hover:border-white/[0.05] text-slate-300"
+                    ? "bg-blue-50/90 dark:bg-[#131D33] border-blue-500/40 dark:border-bullish/40 text-slate-900 dark:text-white shadow-sm dark:shadow-lg dark:shadow-black/40"
+                    : "bg-transparent border-transparent hover:bg-slate-100/80 dark:hover:bg-[#0D1424] hover:border-slate-200 dark:hover:border-white/[0.05] text-slate-700 dark:text-slate-300"
                 }`}
               >
                 {/* Active Indicator Bar */}
                 {isSelected && (
-                  <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-bullish shadow-[0_0_8px_#00E599]"></div>
+                  <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-600 dark:bg-bullish shadow-[0_0_8px_rgba(37,99,235,0.6)] dark:shadow-[0_0_8px_#00E599]"></div>
                 )}
 
                 <div className="min-w-0 flex-1 pl-1 pr-2">
                   <div className="flex items-center gap-2">
                     <span
                       className={`font-mono font-bold text-xs tracking-tight ${
-                        isSelected ? "text-bullish" : "text-white group-hover:text-bullish"
+                        isSelected ? "text-blue-600 dark:text-bullish" : "text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-bullish"
                       }`}
                     >
                       {stock.symbol}
                     </span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-medium tracking-wide uppercase bg-white/[0.04] text-slate-400 border border-white/[0.04]">
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-medium tracking-wide uppercase bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.04]">
                       {stock.sector}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 truncate mt-0.5 font-normal">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-normal">
                     {stock.name}
                   </p>
                 </div>
@@ -186,16 +180,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation()
-                    onToggleWatchlist(stock.symbol)
+                    toggleWatchlist(stock.symbol)
                   }}
                   className={`p-1.5 rounded-lg transition shrink-0 ${
                     inWatchlist
-                      ? "text-amberAccent hover:bg-amberAccent/10"
-                      : "text-slate-600 hover:text-slate-300 hover:bg-white/[0.05]"
+                      ? "text-amber-500 dark:text-amberAccent hover:bg-amber-100/60 dark:hover:bg-amberAccent/10"
+                      : "text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.05]"
                   }`}
                   title={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
                 >
-                  <Star className={`h-3.5 w-3.5 ${inWatchlist ? "fill-amberAccent" : ""}`} />
+                  <Star className={`h-3.5 w-3.5 ${inWatchlist ? "fill-amber-500 dark:fill-amberAccent" : ""}`} />
                 </button>
               </div>
             )
