@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react"
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   fetchStocks,
   fetchSectors,
@@ -152,24 +152,41 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return res
   }, [])
 
+  const contextValue = useMemo<StockContextType>(
+    () => ({
+      stocks,
+      sectors,
+      selectedSymbol,
+      detail,
+      loadingDetail,
+      activeTab,
+      watchlist,
+      selectStock,
+      toggleWatchlist,
+      clearWatchlist,
+      setActiveTab,
+      getCachedHistory,
+      getCachedIndicators,
+    }),
+    [
+      stocks,
+      sectors,
+      selectedSymbol,
+      detail,
+      loadingDetail,
+      activeTab,
+      watchlist,
+      selectStock,
+      toggleWatchlist,
+      clearWatchlist,
+      setActiveTab,
+      getCachedHistory,
+      getCachedIndicators,
+    ]
+  )
+
   return (
-    <StockContext.Provider
-      value={{
-        stocks,
-        sectors,
-        selectedSymbol,
-        detail,
-        loadingDetail,
-        activeTab,
-        watchlist,
-        selectStock,
-        toggleWatchlist,
-        clearWatchlist,
-        setActiveTab,
-        getCachedHistory,
-        getCachedIndicators,
-      }}
-    >
+    <StockContext.Provider value={contextValue}>
       {children}
     </StockContext.Provider>
   )

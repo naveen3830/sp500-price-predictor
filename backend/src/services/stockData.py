@@ -1,4 +1,6 @@
+import os
 import time
+import pickle
 import logging
 from datetime import date
 from typing import List, Dict, Optional, Any
@@ -150,7 +152,9 @@ stockDatabase: Dict[str, Dict[str, str]] = {
 }
 
 cacheStore: Dict[str, Dict[str, Any]] = {}
-cacheTtlSeconds = 300
+cacheTtlSeconds = 86400
+cacheDirectory = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cache")
+os.makedirs(cacheDirectory, exist_ok=True)
 
 
 def validateSymbol(symbol: str) -> bool:
@@ -199,14 +203,31 @@ def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[
     if endDate is None:
         endDate = date.today().strftime("%Y-%m-%d")
 
-    cacheKey = f"{sym}_{startDate}_{endDate}"
+    cleanStartDate = startDate.replace("-", "")
+    cleanEndDate = endDate.replace("-", "")
+    cacheKey = f"{sym}{cleanStartDate}{cleanEndDate}"
     currentTime = time.time()
     
+    # 1. Check in-memory store
     if cacheKey in cacheStore:
         entry = cacheStore[cacheKey]
         if currentTime - entry["timestamp"] < cacheTtlSeconds:
             return entry["data"].copy()
 
+    # 2. Check on-disk cache
+    diskFilePath = os.path.join(cacheDirectory, f"{cacheKey}.pkl")
+    if os.path.exists(diskFilePath):
+        try:
+            fileModTime = os.path.getmtime(diskFilePath)
+            if currentTime - fileModTime < cacheTtlSeconds:
+                with open(diskFilePath, "rb") as fileHandle:
+                    cachedFrame = pickle.load(fileHandle)
+                cacheStore[cacheKey] = {"data": cachedFrame, "timestamp": currentTime}
+                return cachedFrame.copy()
+        except Exception as readError:
+            logger.warning(f"Failed to read disk cache for {sym}: {readError}")
+
+    # 3. Download fresh data
     try:
         logger.info(f"Downloading stock data for {sym} from {startDate} to {endDate}")
         data = yf.download(sym, start=startDate, end=endDate, progress=False)
@@ -225,7 +246,16 @@ def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[
         data["Date"] = pd.to_datetime(data["Date"])
         data = data.ffill().bfill()
 
+        # Update in-memory cache
         cacheStore[cacheKey] = {"data": data, "timestamp": currentTime}
+
+        # Update disk cache
+        try:
+            with open(diskFilePath, "wb") as fileHandle:
+                pickle.dump(data, fileHandle)
+        except Exception as writeError:
+            logger.warning(f"Failed to write disk cache for {sym}: {writeError}")
+
         return data.copy()
 
     except Exception as errorDetails:
