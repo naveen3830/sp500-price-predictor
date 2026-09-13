@@ -90,6 +90,14 @@ export interface ForecastResponse {
 
 const API_BASE = "/api"
 
+function cleanSymbol(symbol: string): string {
+  return encodeURIComponent(symbol.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, ""))
+}
+
+function cleanParam(param: string): string {
+  return encodeURIComponent(param.trim())
+}
+
 export async function fetchStocks(sector?: string, search?: string): Promise<StockItem[]> {
   const params = new URLSearchParams()
   if (sector && sector !== "All") params.append("sector", sector)
@@ -106,25 +114,30 @@ export async function fetchSectors(): Promise<string[]> {
 }
 
 export async function fetchStockDetail(symbol: string): Promise<StockDetailResponse> {
-  const res = await fetch(`${API_BASE}/stocks/${symbol}`)
+  const safeSymbol = cleanSymbol(symbol)
+  const res = await fetch(`${API_BASE}/stocks/${safeSymbol}`)
   if (!res.ok) throw new Error(`Failed to load details for ${symbol}`)
   return res.json()
 }
 
 export async function fetchStockHistory(symbol: string, period = "1y"): Promise<HistoryResponse> {
-  const res = await fetch(`${API_BASE}/stocks/${symbol}/history?period=${period}`)
+  const safeSymbol = cleanSymbol(symbol)
+  const safePeriod = cleanParam(period)
+  const res = await fetch(`${API_BASE}/stocks/${safeSymbol}/history?period=${safePeriod}`)
   if (!res.ok) throw new Error(`Failed to load history for ${symbol}`)
   return res.json()
 }
 
 export async function fetchStockIndicators(symbol: string): Promise<IndicatorsResponse> {
-  const res = await fetch(`${API_BASE}/stocks/${symbol}/indicators`)
+  const safeSymbol = cleanSymbol(symbol)
+  const res = await fetch(`${API_BASE}/stocks/${safeSymbol}/indicators`)
   if (!res.ok) throw new Error(`Failed to load indicators for ${symbol}`)
   return res.json()
 }
 
 export async function predictStock(symbol: string, forecastDays = 15, epochs = 10): Promise<ForecastResponse> {
-  const res = await fetch(`${API_BASE}/stocks/${symbol}/predict`, {
+  const safeSymbol = cleanSymbol(symbol)
+  const res = await fetch(`${API_BASE}/stocks/${safeSymbol}/predict`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -141,5 +154,8 @@ export async function predictStock(symbol: string, forecastDays = 15, epochs = 1
 }
 
 export function getExportUrl(symbol: string, exportType: "history" | "indicators" | "summary", fileFormat: "csv" | "json"): string {
-  return `${API_BASE}/stocks/${symbol}/export?export_type=${exportType}&file_format=${fileFormat}`
+  const safeSymbol = cleanSymbol(symbol)
+  const safeType = cleanParam(exportType)
+  const safeFormat = cleanParam(fileFormat)
+  return `${API_BASE}/stocks/${safeSymbol}/export?export_type=${safeType}&file_format=${safeFormat}`
 }

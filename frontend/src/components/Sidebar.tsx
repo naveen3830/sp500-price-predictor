@@ -29,7 +29,15 @@ const StockCard: React.FC<StockCardProps> = React.memo(
   ({ stock, isSelected, inWatchlist, onSelect, onToggleWatchlist }) => {
     return (
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => onSelect(stock.symbol)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            onSelect(stock.symbol)
+          }
+        }}
         className={`group relative flex items-center justify-between p-2 rounded-xl cursor-pointer transition-colors duration-75 border ${isSelected
             ? "bg-blue-50/90 dark:bg-[#131D33] border-blue-500/40 dark:border-bullish/40 text-slate-900 dark:text-white shadow-sm dark:shadow-lg dark:shadow-black/40"
             : "bg-transparent border-transparent hover:bg-slate-100/80 dark:hover:bg-[#0D1424] hover:border-slate-200 dark:hover:border-white/[0.05] text-slate-700 dark:text-slate-300"

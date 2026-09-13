@@ -229,7 +229,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ symbol }) => {
                   strokeWidth={2.5}
                   fill={`url(#${gradientId})`}
                   dot={false}
-                  activeDot={{ r: 5, fill: strokeColor, stroke: isDark ? "#ffffff" : "#ffffff", strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: strokeColor, stroke: "#ffffff", strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
