@@ -29,16 +29,7 @@ const StockCard: React.FC<StockCardProps> = React.memo(
   ({ stock, isSelected, inWatchlist, onSelect, onToggleWatchlist }) => {
     return (
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onSelect(stock.symbol)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            onSelect(stock.symbol)
-          }
-        }}
-        className={`group relative flex items-center justify-between p-2 rounded-xl cursor-pointer transition-colors duration-75 border ${isSelected
+        className={`group relative flex items-center justify-between p-2 rounded-xl transition-colors duration-75 border ${isSelected
             ? "bg-blue-50/90 dark:bg-[#131D33] border-blue-500/40 dark:border-bullish/40 text-slate-900 dark:text-white shadow-sm dark:shadow-lg dark:shadow-black/40"
             : "bg-transparent border-transparent hover:bg-slate-100/80 dark:hover:bg-[#0D1424] hover:border-slate-200 dark:hover:border-white/[0.05] text-slate-700 dark:text-slate-300"
           }`}
@@ -48,7 +39,11 @@ const StockCard: React.FC<StockCardProps> = React.memo(
           <div className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600 dark:bg-bullish shadow-[0_0_8px_rgba(37,99,235,0.6)] dark:shadow-[0_0_8px_#00E599]" />
         )}
 
-        <div className="min-w-0 flex-1 pl-1 pr-2">
+        <button
+          type="button"
+          onClick={() => onSelect(stock.symbol)}
+          className="min-w-0 flex-1 pl-1 pr-2 text-left bg-transparent border-0 cursor-pointer focus:outline-none"
+        >
           <div className="flex items-center gap-1.5">
             <span
               className={`font-mono font-bold text-xs tracking-tight ${isSelected
@@ -65,20 +60,18 @@ const StockCard: React.FC<StockCardProps> = React.memo(
           <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-normal">
             {stock.name}
           </p>
-        </div>
+        </button>
 
         {/* Watchlist Toggle */}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleWatchlist(stock.symbol)
-          }}
+          onClick={() => onToggleWatchlist(stock.symbol)}
           className={`p-1.5 rounded-lg transition shrink-0 ${inWatchlist
               ? "text-amber-500 dark:text-amberAccent hover:bg-amber-100/60 dark:hover:bg-amberAccent/10"
               : "text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.05]"
             }`}
           title={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+          aria-label={inWatchlist ? `Remove ${stock.symbol} from watchlist` : `Add ${stock.symbol} to watchlist`}
         >
           <Star className={`h-3.5 w-3.5 ${inWatchlist ? "fill-amber-500 dark:fill-amberAccent" : ""}`} />
         </button>

@@ -71,12 +71,12 @@
     @apply border-border;
   }
   ::selection {
-    background-color: rgba(37, 99, 235, 0.15);
-    color: #1D4ED8;
+    background-color: #2563EB;
+    color: #FFFFFF;
   }
   .dark ::selection {
-    background-color: rgba(0, 229, 153, 0.25);
-    color: #00E599;
+    background-color: #00E599;
+    color: #080C14;
   }
   body {
     @apply bg-[#F0F4FA] text-slate-900 dark:bg-[#080C14] dark:text-slate-100 font-sans antialiased;

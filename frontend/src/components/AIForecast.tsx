@@ -17,6 +17,29 @@ interface AIForecastProps {
   symbol: string
 }
 
+interface ForecastPoint {
+  Date: string
+  Predicted: number
+  Upper: number
+  Lower: number
+}
+
+const ForecastTooltip: React.FC<{ active?: boolean; payload?: Array<{ payload: ForecastPoint }> }> = ({
+  active,
+  payload,
+}) => {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="p-3 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
+      <div className="text-slate-500 dark:text-slate-400 text-[10px]">{d.Date}</div>
+      <div className="text-emerald-600 dark:text-bullish font-bold">Predicted: ${d.Predicted.toFixed(2)}</div>
+      <div className="text-slate-500 dark:text-slate-400 text-[11px]">Upper (95%): ${d.Upper.toFixed(2)}</div>
+      <div className="text-slate-500 dark:text-slate-400 text-[11px]">Lower (95%): ${d.Lower.toFixed(2)}</div>
+    </div>
+  )
+}
+
 export const AIForecast: React.FC<AIForecastProps> = ({ symbol }) => {
   const { theme } = useTheme()
   const [forecastDays, setForecastDays] = useState<number>(15)
@@ -231,22 +254,7 @@ export const AIForecast: React.FC<AIForecastProps> = ({ symbol }) => {
                     orientation="right"
                     tickFormatter={(v) => `$${v.toFixed(0)}`}
                   />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const d = payload[0].payload
-                        return (
-                          <div className="p-3 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
-                            <div className="text-slate-500 dark:text-slate-400 text-[10px]">{d.Date}</div>
-                            <div className="text-emerald-600 dark:text-bullish font-bold">Predicted: ${d.Predicted.toFixed(2)}</div>
-                            <div className="text-slate-500 dark:text-slate-400 text-[11px]">Upper (95%): ${d.Upper.toFixed(2)}</div>
-                            <div className="text-slate-500 dark:text-slate-400 text-[11px]">Lower (95%): ${d.Lower.toFixed(2)}</div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <Tooltip content={<ForecastTooltip />} />
                   <Area type="monotone" dataKey="Upper" stroke="#8B5CF6" strokeWidth={1} strokeDasharray="3 3" fill="url(#corridorGradient)" />
                   <Line type="monotone" dataKey="Lower" stroke="#8B5CF6" strokeWidth={1} strokeDasharray="3 3" dot={false} />
                   <Line type="monotone" dataKey="Predicted" stroke={isDark ? "#00E599" : "#059669"} strokeWidth={2.5} dot={{ r: 3, fill: isDark ? "#00E599" : "#059669" }} />

@@ -5,7 +5,7 @@ import { useStockContext } from "../context/StockContext"
 export const KeyMetrics: React.FC = () => {
   const { detail, watchlist, toggleWatchlist } = useStockContext()
 
-  if (!detail || !detail.price_info) return null
+  if (!detail?.price_info) return null
 
   const { info, price_info: priceInfo, returns } = detail
   const isInWatchlist = watchlist.includes(info.symbol)

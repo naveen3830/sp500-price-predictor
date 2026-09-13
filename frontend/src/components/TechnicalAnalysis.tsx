@@ -30,6 +30,80 @@ interface TechnicalAnalysisProps {
   symbol: string
 }
 
+const getHistogramBarColor = (isDark: boolean, isPositive: boolean): string => {
+  if (isDark) {
+    return isPositive ? "#00E599" : "#FF385C"
+  }
+  return isPositive ? "#059669" : "#DC2626"
+}
+
+interface TooltipPayload<T = any> {
+  payload: T
+}
+
+const RsiTooltip: React.FC<{ active?: boolean; payload?: Array<TooltipPayload<any>> }> = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 shadow-md">
+      <div className="text-slate-500 dark:text-slate-400 text-[10px]">{d.Date}</div>
+      <div className="font-bold text-blue-600 dark:text-cyanAccent tabular-nums">
+        RSI: {d.RSI ? d.RSI.toFixed(2) : "N/A"}
+      </div>
+    </div>
+  )
+}
+
+const MacdTooltip: React.FC<{ active?: boolean; payload?: Array<TooltipPayload<any>> }> = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  const histVal = d.MACD_Histogram ?? d.MACD_Hist ?? 0
+  return (
+    <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
+      <div className="text-slate-400 text-[10px]">{d.Date}</div>
+      <div>MACD: <span className="font-bold text-blue-600 dark:text-cyanAccent">{d.MACD != null ? d.MACD.toFixed(2) : "N/A"}</span></div>
+      <div>Signal: <span className="font-bold text-indigo-600 dark:text-violetAccent">{d.MACD_Signal != null ? d.MACD_Signal.toFixed(2) : "N/A"}</span></div>
+      <div>Hist: <span className={`font-bold ${histVal >= 0 ? "text-emerald-600 dark:text-bullish" : "text-rose-600 dark:text-bearish"}`}>{histVal.toFixed(2)}</span></div>
+    </div>
+  )
+}
+
+const BollingerTooltip: React.FC<{ active?: boolean; payload?: Array<TooltipPayload<any>> }> = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  return (
+    <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
+      <div className="text-slate-400 text-[10px]">{d.Date}</div>
+      <div>Close: <span className="font-bold text-slate-900 dark:text-white">${d.Close?.toFixed(2)}</span></div>
+      <div>Upper Band: <span className="font-bold text-indigo-600 dark:text-violetAccent">${d.BB_Upper?.toFixed(2)}</span></div>
+      <div>Lower Band: <span className="font-bold text-indigo-600 dark:text-violetAccent">${d.BB_Lower?.toFixed(2)}</span></div>
+    </div>
+  )
+}
+
+const getSignalBadge = (sig?: string) => {
+  if (!sig) return null
+  if (sig === "Bullish" || sig === "Oversold") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-bold bg-emerald-50 dark:bg-bullish-muted text-emerald-700 dark:text-bullish border border-emerald-200 dark:border-bullish-border">
+        <ArrowUpRight className="h-3 w-3" /> {sig}
+      </span>
+    )
+  }
+  if (sig === "Bearish" || sig === "Overbought") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-bold bg-rose-50 dark:bg-bearish-muted text-rose-700 dark:text-bearish border border-rose-200 dark:border-bearish-border">
+        <ArrowDownRight className="h-3 w-3" /> {sig}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-medium bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.06]">
+      <Minus className="h-3 w-3" /> {sig}
+    </span>
+  )
+}
+
 export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) => {
   const { theme } = useTheme()
   const { getCachedIndicators } = useStockContext()
@@ -83,28 +157,6 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
 
   const { summary, data: records } = data
 
-  const getSignalBadge = (sig?: string) => {
-    if (!sig) return null
-    if (sig === "Bullish" || sig === "Oversold") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-bold bg-emerald-50 dark:bg-bullish-muted text-emerald-700 dark:text-bullish border border-emerald-200 dark:border-bullish-border">
-          <ArrowUpRight className="h-3 w-3" /> {sig}
-        </span>
-      )
-    }
-    if (sig === "Bearish" || sig === "Overbought") {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-bold bg-rose-50 dark:bg-bearish-muted text-rose-700 dark:text-bearish border border-rose-200 dark:border-bearish-border">
-          <ArrowDownRight className="h-3 w-3" /> {sig}
-        </span>
-      )
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-medium bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.06]">
-        <Minus className="h-3 w-3" /> {sig}
-      </span>
-    )
-  }
 
   const rsiValue = summary.rsi?.value ?? 50
   const rsiPos = Math.max(0, Math.min(100, rsiValue))
@@ -280,20 +332,7 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
                 />
                 <ReferenceLine y={70} stroke={isDark ? "#FF385C" : "#DC2626"} strokeDasharray="4 4" label={{ value: "70 Overbought", fill: isDark ? "#FF385C" : "#DC2626", fontSize: 10 }} />
                 <ReferenceLine y={30} stroke={isDark ? "#00E599" : "#059669"} strokeDasharray="4 4" label={{ value: "30 Oversold", fill: isDark ? "#00E599" : "#059669", fontSize: 10 }} />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const d = payload[0].payload
-                      return (
-                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 shadow-md">
-                          <div className="text-slate-500 dark:text-slate-400 text-[10px]">{d.Date}</div>
-                          <div className="font-bold text-blue-600 dark:text-cyanAccent tabular-nums">RSI: {d.RSI ? d.RSI.toFixed(2) : "N/A"}</div>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
+                <Tooltip content={<RsiTooltip />} />
                 <Line type="monotone" dataKey="RSI" stroke={isDark ? "#00D2FF" : "#2563EB"} strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -332,32 +371,14 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
                   minTickGap={45}
                 />
                 <YAxis stroke={isDark ? "#475569" : "#94A3B8"} fontSize={11} fontFamily="JetBrains Mono, monospace" orientation="right" />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const d = payload[0].payload
-                      const histVal = d.MACD_Histogram ?? d.MACD_Hist ?? 0
-                      return (
-                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
-                          <div className="text-slate-400 text-[10px]">{d.Date}</div>
-                          <div>MACD: <span className="font-bold text-blue-600 dark:text-cyanAccent">{d.MACD != null ? d.MACD.toFixed(2) : "N/A"}</span></div>
-                          <div>Signal: <span className="font-bold text-indigo-600 dark:text-violetAccent">{d.MACD_Signal != null ? d.MACD_Signal.toFixed(2) : "N/A"}</span></div>
-                          <div>Hist: <span className={`font-bold ${histVal >= 0 ? "text-emerald-600 dark:text-bullish" : "text-rose-600 dark:text-bearish"}`}>{histVal.toFixed(2)}</span></div>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
+                <Tooltip content={<MacdTooltip />} />
                 <ReferenceLine y={0} stroke={isDark ? "#475569" : "#CBD5E1"} />
                 <Bar dataKey="MACD_Histogram" radius={[2, 2, 0, 0]} maxBarSize={6}>
-                  {records.map((entry, index) => {
+                  {records.map((entry) => {
                     const val = entry.MACD_Histogram ?? entry.MACD_Hist ?? 0
                     const isPos = val >= 0
-                    const barColor = isDark
-                      ? isPos ? "#00E599" : "#FF385C"
-                      : isPos ? "#059669" : "#DC2626"
-                    return <Cell key={`cell-${index}`} fill={barColor} fillOpacity={0.6} />
+                    const barColor = getHistogramBarColor(isDark, isPos)
+                    return <Cell key={`cell-${entry.Date}`} fill={barColor} fillOpacity={0.6} />
                   })}
                 </Bar>
                 <Line type="monotone" dataKey="MACD" stroke={isDark ? "#00D2FF" : "#2563EB"} strokeWidth={2} dot={false} />
@@ -398,22 +419,7 @@ export const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ symbol }) 
                   minTickGap={45}
                 />
                 <YAxis stroke={isDark ? "#475569" : "#94A3B8"} fontSize={11} fontFamily="JetBrains Mono, monospace" orientation="right" />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const d = payload[0].payload
-                      return (
-                        <div className="p-2.5 rounded-xl bg-white dark:bg-[#090E1A] border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-1 shadow-md">
-                          <div className="text-slate-400 text-[10px]">{d.Date}</div>
-                          <div>Close: <span className="font-bold text-slate-900 dark:text-white">${d.Close?.toFixed(2)}</span></div>
-                          <div>Upper Band: <span className="font-bold text-indigo-600 dark:text-violetAccent">${d.BB_Upper?.toFixed(2)}</span></div>
-                          <div>Lower Band: <span className="font-bold text-indigo-600 dark:text-violetAccent">${d.BB_Lower?.toFixed(2)}</span></div>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
+                <Tooltip content={<BollingerTooltip />} />
                 <Line type="monotone" dataKey="Close" stroke={isDark ? "#ffffff" : "#0F172A"} strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="SMA_20" stroke={isDark ? "#00D2FF" : "#2563EB"} strokeWidth={1.5} dot={false} strokeDasharray="2 2" />
                 <Line type="monotone" dataKey="BB_Upper" stroke={isDark ? "#8B5CF6" : "#7C3AED"} strokeWidth={1.5} dot={false} />
