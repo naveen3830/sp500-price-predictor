@@ -107,6 +107,38 @@ def calculateAllIndicators(dataFrame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def evaluateRsiSignal(rsiValue: float) -> str:
+    if rsiValue >= 70:
+        return "Overbought"
+    if rsiValue <= 30:
+        return "Oversold"
+    return "Neutral"
+
+
+def evaluateMacdSignal(macdValue: float, macdSignalValue: float) -> str:
+    if macdValue > macdSignalValue:
+        return "Bullish"
+    if macdValue < macdSignalValue:
+        return "Bearish"
+    return "Neutral"
+
+
+def evaluateBollingerSignal(closeValue: float, bbUpper: float, bbLower: float) -> str:
+    if closeValue >= bbUpper:
+        return "Overbought"
+    if closeValue <= bbLower:
+        return "Oversold"
+    return "Neutral"
+
+
+def evaluateTrendSignal(closeValue: float, sma20: float, sma50: float) -> str:
+    if closeValue > sma20 and sma20 > sma50:
+        return "Bullish"
+    if closeValue < sma20:
+        return "Bearish"
+    return "Neutral"
+
+
 def getIndicatorSummary(dataFrame: pd.DataFrame) -> Dict[str, Any]:
     if dataFrame.empty or len(dataFrame) < 50:
         return {}
@@ -114,35 +146,20 @@ def getIndicatorSummary(dataFrame: pd.DataFrame) -> Dict[str, Any]:
     lastRow = dataFrame.iloc[-1]
 
     rsiValue = float(lastRow.get('RSI', 50)) if pd.notna(lastRow.get('RSI')) else 50.0
-    if rsiValue >= 70:
-        rsiSignal = "Overbought"
-    elif rsiValue <= 30:
-        rsiSignal = "Oversold"
-    else:
-        rsiSignal = "Neutral"
+    rsiSignal = evaluateRsiSignal(rsiValue)
 
     macdValue = float(lastRow.get('MACD', 0)) if pd.notna(lastRow.get('MACD')) else 0.0
     macdSignalValue = float(lastRow.get('MACD_Signal', 0)) if pd.notna(lastRow.get('MACD_Signal')) else 0.0
-    if macdValue > macdSignalValue:
-        macdSignal = "Bullish"
-    elif macdValue < macdSignalValue:
-        macdSignal = "Bearish"
-    else:
-        macdSignal = "Neutral"
+    macdSignal = evaluateMacdSignal(macdValue, macdSignalValue)
 
     closeValue = float(lastRow['Close'])
     bbUpper = float(lastRow.get('BB_Upper', closeValue)) if pd.notna(lastRow.get('BB_Upper')) else closeValue
     bbLower = float(lastRow.get('BB_Lower', closeValue)) if pd.notna(lastRow.get('BB_Lower')) else closeValue
-    if closeValue >= bbUpper:
-        bbSignal = "Overbought"
-    elif closeValue <= bbLower:
-        bbSignal = "Oversold"
-    else:
-        bbSignal = "Neutral"
+    bbSignal = evaluateBollingerSignal(closeValue, bbUpper, bbLower)
 
     sma20 = float(lastRow.get('SMA_20', closeValue)) if pd.notna(lastRow.get('SMA_20')) else closeValue
     sma50 = float(lastRow.get('SMA_50', closeValue)) if pd.notna(lastRow.get('SMA_50')) else closeValue
-    movingAverageTrend = "Bullish" if (closeValue > sma20 and sma20 > sma50) else ("Bearish" if closeValue < sma20 else "Neutral")
+    movingAverageTrend = evaluateTrendSignal(closeValue, sma20, sma50)
 
     return {
         "rsi": {"value": round(rsiValue, 2), "signal": rsiSignal},

@@ -10,6 +10,8 @@ import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
+realEstateSector = "Real Estate"
+
 stockDatabase: Dict[str, Dict[str, str]] = {
     # Technology
     "AAPL": {"name": "Apple Inc.", "sector": "Technology"},
@@ -124,13 +126,13 @@ stockDatabase: Dict[str, Dict[str, str]] = {
     "WBD": {"name": "Warner Bros. Discovery", "sector": "Telecom"},
     
     # Real Estate
-    "AMT": {"name": "American Tower Corp.", "sector": "Real Estate"},
-    "PLD": {"name": "Prologis Inc.", "sector": "Real Estate"},
-    "CCI": {"name": "Crown Castle Inc.", "sector": "Real Estate"},
-    "SPG": {"name": "Simon Property Group", "sector": "Real Estate"},
-    "EQIX": {"name": "Equinix Inc.", "sector": "Real Estate"},
-    "PSA": {"name": "Public Storage", "sector": "Real Estate"},
-    "O": {"name": "Realty Income Corporation", "sector": "Real Estate"},
+    "AMT": {"name": "American Tower Corp.", "sector": realEstateSector},
+    "PLD": {"name": "Prologis Inc.", "sector": realEstateSector},
+    "CCI": {"name": "Crown Castle Inc.", "sector": realEstateSector},
+    "SPG": {"name": "Simon Property Group", "sector": realEstateSector},
+    "EQIX": {"name": "Equinix Inc.", "sector": realEstateSector},
+    "PSA": {"name": "Public Storage", "sector": realEstateSector},
+    "O": {"name": "Realty Income Corporation", "sector": realEstateSector},
     
     # Utilities
     "NEE": {"name": "NextEra Energy Inc.", "sector": "Utilities"},
@@ -165,7 +167,7 @@ def validateSymbol(symbol: str) -> bool:
 
 
 def getAllSectors() -> List[str]:
-    return sorted(list(set(item["sector"] for item in stockDatabase.values())))
+    return sorted({item["sector"] for item in stockDatabase.values()})
 
 
 def getStocks(sector: Optional[str] = None, search: Optional[str] = None) -> List[Dict[str, str]]:
@@ -259,7 +261,7 @@ def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[
         return data.copy()
 
     except Exception as errorDetails:
-        logger.error(f"Error downloading stock data for {sym}: {errorDetails}")
+        logger.exception(f"Error downloading stock data for {sym}: {errorDetails}")
         return pd.DataFrame()
 
 
@@ -294,7 +296,7 @@ def getCurrentPriceInfo(data: pd.DataFrame) -> Optional[Dict[str, Any]]:
             'latest_date': df['Date'].iloc[-1].strftime("%Y-%m-%d")
         }
     except Exception as errorDetails:
-        logger.error(f"Error calculating price info: {errorDetails}")
+        logger.exception(f"Error calculating price info: {errorDetails}")
         return None
 
 
@@ -326,5 +328,5 @@ def calculateReturns(data: pd.DataFrame, periods: Optional[List[int]] = None) ->
                     calculatedReturns[periodName] = round(periodReturn, 2)
         return calculatedReturns
     except Exception as errorDetails:
-        logger.error(f"Error calculating returns: {errorDetails}")
+        logger.exception(f"Error calculating returns: {errorDetails}")
         return {}

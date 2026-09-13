@@ -17,7 +17,7 @@ router = APIRouter(prefix="/stocks", tags=["stocks"])
 
 
 # List S&P 500 stocks with optional sector filter and search
-@router.get("", response_model=List[StockItem])
+@router.get("")
 def listStocks(
     sector: Optional[str] = Query(None, description="Filter by sector"),
     search: Optional[str] = Query(None, description="Search symbol or company name")
@@ -26,7 +26,7 @@ def listStocks(
 
 
 # Retrieve all unique market sectors
-@router.get("/sectors", response_model=List[str])
+@router.get("/sectors")
 def listSectors() -> List[str]:
     return getAllSectors()
 
