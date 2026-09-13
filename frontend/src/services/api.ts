@@ -90,12 +90,20 @@ export interface ForecastResponse {
 
 const API_BASE = "/api"
 
+const SYMBOL_REGEX = /^[A-Z0-9.-]{1,10}$/
+const ALLOWED_PERIODS = new Set(["1m", "3m", "6m", "1y", "2y", "5y", "all"])
+
 function cleanSymbol(symbol: string): string {
-  return encodeURIComponent(symbol.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, ""))
+  const sanitized = symbol.trim().toUpperCase()
+  if (!SYMBOL_REGEX.test(sanitized)) {
+    throw new Error("Invalid stock symbol")
+  }
+  return encodeURIComponent(sanitized)
 }
 
 function cleanParam(param: string): string {
-  return encodeURIComponent(param.trim())
+  const sanitized = param.trim().toLowerCase()
+  return ALLOWED_PERIODS.has(sanitized) ? sanitized : "1y"
 }
 
 export async function fetchStocks(sector?: string, search?: string): Promise<StockItem[]> {
