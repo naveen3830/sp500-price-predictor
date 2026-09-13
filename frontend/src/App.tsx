@@ -28,6 +28,74 @@ const MainContent: React.FC = () => {
     selectStock,
   } = useStockContext()
 
+  const renderMainContent = () => {
+    if (loadingDetail && !detail) {
+      return (
+        <div className="h-96 flex flex-col items-center justify-center gap-3 text-slate-400 bg-white/90 dark:bg-[#0E1526]/40 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-8 shadow-cardLight dark:shadow-terminal">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-bullish" />
+          <div className="text-center space-y-1">
+            <span className="text-sm font-mono text-slate-900 dark:text-white font-semibold block">
+              Streaming telemetry for {selectedSymbol}...
+            </span>
+            <span className="text-xs text-slate-500">
+              Retrieving OHLCV quotations, technical indicator signals & metadata
+            </span>
+          </div>
+        </div>
+      )
+    }
+
+    if (detail) {
+      return (
+        <div className="space-y-5">
+          {/* Bento Grid Main Key Metrics */}
+          <KeyMetrics />
+
+          {/* Dynamic Tab Panes */}
+          <div className="transition-opacity duration-200">
+            {activeTab === "overview" && <PriceChart symbol={detail.info.symbol} />}
+            {activeTab === "technicals" && <TechnicalAnalysis symbol={detail.info.symbol} />}
+            {activeTab === "forecast" && <AIForecast symbol={detail.info.symbol} />}
+            {activeTab === "export" && <ExportData symbol={detail.info.symbol} />}
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      /* Welcome / Empty State */
+      <div className="p-12 rounded-3xl bg-white/90 dark:bg-[#0E1526]/80 border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl text-center max-w-2xl mx-auto my-16 space-y-5 shadow-cardLight dark:shadow-terminal">
+        <div className="h-16 w-16 rounded-2xl bg-blue-50 dark:bg-bullish-muted border border-blue-200 dark:border-bullish-border text-blue-600 dark:text-bullish flex items-center justify-center mx-auto shadow-sm dark:shadow-glowEmerald">
+          <Sparkles className="h-8 w-8" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            S&P 500 Market Terminal
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            Select an index constituent stock from the sidebar to stream real-time price action, algorithmic technical indicators, and price forecasting.
+          </p>
+        </div>
+        <div className="flex justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => selectStock("NVDA")}
+            className="px-5 py-2.5 rounded-xl bg-blue-600 dark:bg-bullish text-white dark:text-slate-950 font-mono font-bold text-xs flex items-center gap-2 shadow-sm dark:shadow-glowEmerald hover:opacity-90 transition cursor-pointer"
+          >
+            <TrendingUp className="h-4 w-4" /> Analyze NVDA
+          </button>
+          <button
+            type="button"
+            onClick={() => selectStock("AAPL")}
+            className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 text-slate-700 dark:text-slate-300 font-mono font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+          >
+            <TrendingUp className="h-4 w-4" /> Analyze AAPL
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#F0F4FA] dark:bg-[#080C14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Header />
@@ -93,63 +161,7 @@ const MainContent: React.FC = () => {
             </button>
           </div>
 
-          {loadingDetail && !detail ? (
-            <div className="h-96 flex flex-col items-center justify-center gap-3 text-slate-400 bg-white/90 dark:bg-[#0E1526]/40 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-8 shadow-cardLight dark:shadow-terminal">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-bullish" />
-              <div className="text-center space-y-1">
-                <span className="text-sm font-mono text-slate-900 dark:text-white font-semibold block">
-                  Streaming telemetry for {selectedSymbol}...
-                </span>
-                <span className="text-xs text-slate-500">
-                  Retrieving OHLCV quotations, technical indicator signals & metadata
-                </span>
-              </div>
-            </div>
-          ) : detail ? (
-            <div className="space-y-5">
-              {/* Bento Grid Main Key Metrics */}
-              <KeyMetrics />
-
-              {/* Dynamic Tab Panes */}
-              <div className="transition-opacity duration-200">
-                {activeTab === "overview" && <PriceChart symbol={detail.info.symbol} />}
-                {activeTab === "technicals" && <TechnicalAnalysis symbol={detail.info.symbol} />}
-                {activeTab === "forecast" && <AIForecast symbol={detail.info.symbol} />}
-                {activeTab === "export" && <ExportData symbol={detail.info.symbol} />}
-              </div>
-            </div>
-          ) : (
-            /* Welcome / Empty State */
-            <div className="p-12 rounded-3xl bg-white/90 dark:bg-[#0E1526]/80 border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl text-center max-w-2xl mx-auto my-16 space-y-5 shadow-cardLight dark:shadow-terminal">
-              <div className="h-16 w-16 rounded-2xl bg-blue-50 dark:bg-bullish-muted border border-blue-200 dark:border-bullish-border text-blue-600 dark:text-bullish flex items-center justify-center mx-auto shadow-sm dark:shadow-glowEmerald">
-                <Sparkles className="h-8 w-8" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  S&P 500 Market Terminal
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  Select an index constituent stock from the sidebar to stream real-time price action, algorithmic technical indicators, and price forecasting.
-                </p>
-              </div>
-              <div className="flex justify-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => selectStock("NVDA")}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 dark:bg-bullish text-white dark:text-slate-950 font-mono font-bold text-xs flex items-center gap-2 shadow-sm dark:shadow-glowEmerald hover:opacity-90 transition cursor-pointer"
-                >
-                  <TrendingUp className="h-4 w-4" /> Analyze NVDA
-                </button>
-                <button
-                  type="button"
-                  onClick={() => selectStock("AAPL")}
-                  className="px-5 py-2.5 rounded-xl bg-white dark:bg-[#141E33] border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white font-mono font-bold text-xs flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-[#18243E] transition cursor-pointer shadow-sm"
-                >
-                  Analyze AAPL
-                </button>
-              </div>
-            </div>
-          )}
+          {renderMainContent()}
         </main>
       </div>
     </div>

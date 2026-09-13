@@ -32,7 +32,11 @@ def listSectors() -> List[str]:
 
 
 # Retrieve stock profile, latest price summary, and trailing returns
-@router.get("/{symbol}", response_model=StockDetailResponse)
+@router.get(
+    "/{symbol}",
+    response_model=StockDetailResponse,
+    responses={404: {"description": "Stock not found"}}
+)
 def getStock(symbol: str) -> Dict[str, Any]:
     stockSymbol = symbol.upper().strip()
     stockInfo = getStockInfo(stockSymbol)
@@ -51,7 +55,13 @@ def getStock(symbol: str) -> Dict[str, Any]:
 
 
 # Get historical OHLCV data formatted for charting
-@router.get("/{symbol}/history")
+@router.get(
+    "/{symbol}/history",
+    responses={
+        404: {"description": "Stock not found"},
+        500: {"description": "Failed to fetch market data"}
+    }
+)
 def getHistory(
     symbol: str,
     period: Optional[str] = Query("1y", description="Time period: 1m, 3m, 6m, 1y, 2y, 5y, all"),
@@ -94,7 +104,10 @@ def getHistory(
 
 
 # Calculate and return full technical indicators plus current signal ratings
-@router.get("/{symbol}/indicators")
+@router.get(
+    "/{symbol}/indicators",
+    responses={404: {"description": "Stock data not found"}}
+)
 def getIndicators(symbol: str) -> Dict[str, Any]:
     stockSymbol = symbol.upper().strip()
     stockData = loadStockData(stockSymbol)
@@ -117,7 +130,14 @@ def getIndicators(symbol: str) -> Dict[str, Any]:
 
 
 # Train LSTM model and generate forward price projections
-@router.post("/{symbol}/predict", response_model=ForecastResponse)
+@router.post(
+    "/{symbol}/predict",
+    response_model=ForecastResponse,
+    responses={
+        404: {"description": "Stock data not found"},
+        500: {"description": "Prediction error"}
+    }
+)
 def predictStock(symbol: str, requestData: PredictionRequest) -> Dict[str, Any]:
     stockSymbol = symbol.upper().strip()
     stockData = loadStockData(stockSymbol)
@@ -141,7 +161,10 @@ def predictStock(symbol: str, requestData: PredictionRequest) -> Dict[str, Any]:
 
 
 # Export dataset in CSV or JSON
-@router.get("/{symbol}/export")
+@router.get(
+    "/{symbol}/export",
+    responses={404: {"description": "Data not found"}}
+)
 def exportStockData(
     symbol: str,
     exportType: str = Query("history", description="Type of data: history, indicators, summary"),
