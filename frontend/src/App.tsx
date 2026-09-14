@@ -62,6 +62,8 @@ const MainContent: React.FC = () => {
       )
     }
 
+    // Test PR scan for SonarCloud comment verification
+
     return (
       /* Welcome / Empty State */
       <div className="p-12 rounded-3xl bg-white/90 dark:bg-[#0E1526]/80 border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl text-center max-w-2xl mx-auto my-16 space-y-5 shadow-cardLight dark:shadow-terminal">
@@ -111,11 +113,10 @@ const MainContent: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab("overview")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                activeTab === "overview"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${activeTab === "overview"
                   ? "bg-slate-100 dark:bg-[#18243E] text-blue-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
+                }`}
             >
               <BarChart3 className="h-4 w-4 text-blue-600 dark:text-bullish" />
               <span>Overview &amp; Action</span>
@@ -124,11 +125,10 @@ const MainContent: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab("technicals")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                activeTab === "technicals"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${activeTab === "technicals"
                   ? "bg-slate-100 dark:bg-[#18243E] text-blue-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
+                }`}
             >
               <Activity className="h-4 w-4 text-blue-600 dark:text-cyanAccent" />
               <span>Technical Indicators</span>
@@ -137,11 +137,10 @@ const MainContent: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab("forecast")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                activeTab === "forecast"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${activeTab === "forecast"
                   ? "bg-slate-100 dark:bg-[#18243E] text-indigo-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
+                }`}
             >
               <Cpu className="h-4 w-4 text-indigo-600 dark:text-violetAccent" />
               <span>Forecasting</span>
@@ -150,11 +149,10 @@ const MainContent: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab("export")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${
-                activeTab === "export"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-150 cursor-pointer shrink-0 ${activeTab === "export"
                   ? "bg-slate-100 dark:bg-[#18243E] text-amber-600 dark:text-white border border-slate-200 dark:border-white/10 shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
+                }`}
             >
               <Download className="h-4 w-4 text-amber-500 dark:text-amberAccent" />
               <span>Data Export</span>
