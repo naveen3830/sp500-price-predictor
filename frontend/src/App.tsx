@@ -50,7 +50,7 @@ const MainContent: React.FC = () => {
         <div className="space-y-5">
           {/* Bento Grid Main Key Metrics */}
           <KeyMetrics />
-
+          {/* Checkout github sonarqube setup */}
           {/* Dynamic Tab Panes */}
           <div className="transition-opacity duration-200">
             {activeTab === "overview" && <PriceChart symbol={detail.info.symbol} />}
