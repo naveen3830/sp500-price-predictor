@@ -62,6 +62,8 @@ const MainContent: React.FC = () => {
       )
     }
 
+    // Test PR scan for SonarCloud comment verification
+
     return (
       /* Welcome / Empty State */
       <div className="p-12 rounded-3xl bg-white/90 dark:bg-[#0E1526]/80 border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl text-center max-w-2xl mx-auto my-16 space-y-5 shadow-cardLight dark:shadow-terminal">
