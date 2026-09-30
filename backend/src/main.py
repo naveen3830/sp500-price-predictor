@@ -45,3 +45,10 @@ def root() -> Dict[str, str]:
         "docs": "/docs",
         "status": "online"
     }
+
+
+@app.get("/health")
+def healthCheck() -> Dict[str, str]:
+    return {
+        "status": "online"
+    }
