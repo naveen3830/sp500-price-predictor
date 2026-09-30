@@ -22,7 +22,7 @@ jobs:
     name: "Apply Dev Infrastructure"
     runs-on: ubuntu-latest
     env:
-      TF_VAR_project_id: "stock-price-prediction-510204"
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
     defaults:
       run:
         working-directory: ./terraform/environments/dev
@@ -35,8 +35,8 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: "projects/1000490214833/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
-          service_account: "sa-terraform-cicd@stock-price-prediction-510204.iam.gserviceaccount.com"
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

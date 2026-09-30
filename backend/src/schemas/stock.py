@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 
-# Request payload for training and forecasting prices via POST /api/stocks/{symbol}/predict
+# Request payload for training and forecasting prices
 class PredictionRequest(BaseModel):
     forecast_days: int = Field(default=15, ge=1, le=60)
     epochs: int = Field(default=10, ge=3, le=50)

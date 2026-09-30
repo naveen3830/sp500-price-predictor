@@ -15,11 +15,11 @@ permissions:
   id-token: write
 
 env:
-  PROJECT_ID: "stock-price-prediction-510204"
-  REGION: "asia-south1"
-  REPOSITORY: "sp500-predictor-dev"
-  WIP_PROVIDER: "projects/1000490214833/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
-  SERVICE_ACCOUNT: "sa-terraform-cicd@stock-price-prediction-510204.iam.gserviceaccount.com"
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  REPOSITORY: ${{ vars.GCP_REPOSITORY }}
+  WIP_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
 jobs:
   # Step 1: Build & Push Backend Container
