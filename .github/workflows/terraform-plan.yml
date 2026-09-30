@@ -1,0 +1,97 @@
+name: "Terraform Plan"
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-*.yml"
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  plan-dev:
+    name: "Plan Dev Infrastructure"
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_project_id: "stock-price-prediction-510204"
+    defaults:
+      run:
+        working-directory: ./terraform/environments/dev
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via WIP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/1000490214833/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
+          service_account: "sa-terraform-cicd@stock-price-prediction-510204.iam.gserviceaccount.com"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -diff
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -no-color -out=tfplan
+          terraform show -no-color tfplan > plan_summary.txt
+        continue-on-error: false
+
+      - name: Publish Summary to PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const planPath = './terraform/environments/dev/plan_summary.txt';
+            let planOutput = 'No changes or error reading plan.';
+            if (fs.existsSync(planPath)) {
+              planOutput = fs.readFileSync(planPath, 'utf8');
+              if (planOutput.length > 60000) {
+                planOutput = planOutput.substring(0, 60000) + '\n... (truncated)';
+              }
+            }
+            const output = `#### Terraform Plan Summary 
+            * **Environment:** \`dev\`
+            * **Pusher:** @${context.actor}
+            * **Action:** \`${context.eventName}\`
+            * **Format & Style:** \`${{ steps.fmt.outcome }}\`
+            * **Initialization:** \`${{ steps.init.outcome }}\`
+            * **Validation:** \`${{ steps.validate.outcome }}\`
+            * **Plan:** \`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan Output</summary>
+
+            \`\`\`terraform
+            ${planOutput}
+            \`\`\`
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
