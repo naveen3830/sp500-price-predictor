@@ -1,0 +1,4 @@
+project_id                = "your-gcp-project-id"
+region                    = "asia-south1"
+environment               = "dev"
+deploy_cloud_run_services = true

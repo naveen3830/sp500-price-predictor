@@ -1,0 +1,61 @@
+name: "Terraform Apply"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-*.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-dev-apply
+  cancel-in-progress: false
+
+jobs:
+  apply-dev:
+    name: "Apply Dev Infrastructure"
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_project_id: "stock-price-prediction-510204"
+    defaults:
+      run:
+        working-directory: ./terraform/environments/dev
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via WIP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/1000490214833/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
+          service_account: "sa-terraform-cicd@stock-price-prediction-510204.iam.gserviceaccount.com"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply -auto-approve -no-color | tee apply_output.txt
+
+      - name: Add Step Summary
+        run: |
+          echo "## Terraform Apply Result: ${{ steps.apply.outcome }} " >> $GITHUB_STEP_SUMMARY
+          echo "Infrastructure deployed to \`dev\` environment in \`stock-price-prediction-510204\`." >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Apply Details</summary><pre><code>" >> $GITHUB_STEP_SUMMARY
+          cat apply_output.txt >> $GITHUB_STEP_SUMMARY
+          echo "</code></pre></details>" >> $GITHUB_STEP_SUMMARY

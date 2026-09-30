@@ -1,0 +1,3 @@
+project_id        = "your-gcp-project-id"
+region            = "asia-south1"
+github_repository = "your-github-username/your-repository-name"
