@@ -88,7 +88,10 @@ export interface ForecastResponse {
   forecast: ForecastPoint[]
 }
 
-const API_BASE = "/api"
+const configuredApiUrl = import.meta.env.VITE_API_URL
+const API_BASE = configuredApiUrl
+  ? `${configuredApiUrl.endsWith("/") ? configuredApiUrl.slice(0, -1) : configuredApiUrl}/api`
+  : "/api"
 
 const SYMBOL_REGEX = /^[A-Z0-9.-]{1,10}$/
 const ALLOWED_PERIODS = new Set(["1m", "3m", "6m", "1y", "2y", "5y", "all"])

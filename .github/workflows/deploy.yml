@@ -1,0 +1,189 @@
+name: "Deploy Application to Cloud Run"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: "stock-price-prediction-510204"
+  REGION: "asia-south1"
+  REPOSITORY: "sp500-predictor-dev"
+  WIP_PROVIDER: "projects/1000490214833/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
+  SERVICE_ACCOUNT: "sa-terraform-cicd@stock-price-prediction-510204.iam.gserviceaccount.com"
+
+jobs:
+  # Step 1: Build & Push Backend Container
+  build-backend:
+    name: "1. Build Backend Image"
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.image-meta.outputs.image_tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via WIP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIP_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build & Push Backend Container Image
+        id: image-meta
+        run: |
+          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/backend:${{ github.sha }}"
+          LATEST_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/backend:latest"
+          
+          docker build -t "$IMAGE_TAG" -t "$LATEST_TAG" ./backend
+          docker push "$IMAGE_TAG"
+          docker push "$LATEST_TAG"
+
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # Step 2: Deploy Backend to Cloud Run
+  deploy-backend:
+    name: "2. Deploy Backend Service"
+    needs: build-backend
+    runs-on: ubuntu-latest
+    outputs:
+      backend_url: ${{ steps.service-url.outputs.backend_url }}
+    steps:
+      - name: Authenticate to Google Cloud via WIP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIP_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Backend to Cloud Run
+        run: |
+          gcloud run deploy sp500-backend-dev \
+            --image "${{ needs.build-backend.outputs.image_tag }}" \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated
+
+      - name: Retrieve Backend URL
+        id: service-url
+        run: |
+          BACKEND_URL=$(gcloud run services describe sp500-backend-dev --region ${{ env.REGION }} --format='value(status.url)')
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+          echo "Backend URL: $BACKEND_URL"
+
+  # Step 3: Build & Push Frontend Container (Injected with Live Backend URL)
+  build-frontend:
+    name: "3. Build Frontend Image"
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.image-meta.outputs.image_tag }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via WIP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIP_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build & Push Frontend Container Image
+        id: image-meta
+        run: |
+          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/frontend:${{ github.sha }}"
+          LATEST_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/frontend:latest"
+          
+          docker build \
+            --build-arg VITE_API_URL="${{ needs.deploy-backend.outputs.backend_url }}" \
+            -t "$IMAGE_TAG" \
+            -t "$LATEST_TAG" \
+            ./frontend
+          
+          docker push "$IMAGE_TAG"
+          docker push "$LATEST_TAG"
+
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # Step 4: Deploy Frontend to Cloud Run
+  deploy-frontend:
+    name: "4. Deploy Frontend Service"
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    outputs:
+      frontend_url: ${{ steps.service-url.outputs.frontend_url }}
+    steps:
+      - name: Authenticate to Google Cloud via WIP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIP_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Frontend to Cloud Run
+        run: |
+          gcloud run deploy sp500-frontend-dev \
+            --image "${{ needs.build-frontend.outputs.image_tag }}" \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated
+
+      - name: Retrieve Frontend URL
+        id: service-url
+        run: |
+          FRONTEND_URL=$(gcloud run services describe sp500-frontend-dev --region ${{ env.REGION }} --format='value(status.url)')
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+          echo "Frontend URL: $FRONTEND_URL"
+
+  # Step 5: Verify Deployment & Output Live Health Status
+  verify-deployment:
+    name: "5. Verify & Health Check"
+    needs: [deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health Check Backend API
+        run: |
+          echo "Testing backend health at: ${{ needs.deploy-backend.outputs.backend_url }}/health"
+          curl -s -f --retry 3 --retry-delay 5 "${{ needs.deploy-backend.outputs.backend_url }}/health"
+
+      - name: Health Check Frontend Web App
+        run: |
+          echo "Testing frontend reachability at: ${{ needs.deploy-frontend.outputs.frontend_url }}"
+          curl -s -f -I --retry 3 --retry-delay 5 "${{ needs.deploy-frontend.outputs.frontend_url }}"
+
+      - name: Publish Live URLs to GitHub Summary
+        run: |
+          echo "## Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Live Endpoint | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Frontend UI** | [${{ needs.deploy-frontend.outputs.frontend_url }}](${{ needs.deploy-frontend.outputs.frontend_url }}) | Healthy |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Backend API Docs** | [${{ needs.deploy-backend.outputs.backend_url }}/docs](${{ needs.deploy-backend.outputs.backend_url }}/docs) | Healthy |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Health Check** | [${{ needs.deploy-backend.outputs.backend_url }}/health](${{ needs.deploy-backend.outputs.backend_url }}/health) | Healthy |" >> $GITHUB_STEP_SUMMARY

@@ -2,6 +2,7 @@ import os
 import time
 import pickle
 import logging
+import hashlib
 from datetime import date
 from typing import List, Dict, Optional, Any
 import pandas as pd
@@ -197,17 +198,21 @@ def getStockInfo(symbol: str) -> Optional[Dict[str, str]]:
 
 
 def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[str] = None) -> pd.DataFrame:
-    sym = symbol.upper().strip()
-    if not validateSymbol(sym):
-        logger.error(f"Invalid symbol: {sym}")
+    normalizedSymbol = symbol.upper().strip()
+    safeSymbol = normalizedSymbol.replace("\r", "").replace("\n", "")
+    if not validateSymbol(normalizedSymbol):
+        logger.error(f"Invalid symbol: {safeSymbol}")
         return pd.DataFrame()
 
     if endDate is None:
         endDate = date.today().strftime("%Y-%m-%d")
 
-    cleanStartDate = startDate.replace("-", "")
-    cleanEndDate = endDate.replace("-", "")
-    cacheKey = f"{sym}{cleanStartDate}{cleanEndDate}"
+    safeStartDate = startDate.replace("\r", "").replace("\n", "")
+    safeEndDate = endDate.replace("\r", "").replace("\n", "")
+
+    cleanStartDate = safeStartDate.replace("-", "")
+    cleanEndDate = safeEndDate.replace("-", "")
+    cacheKey = f"{safeSymbol}{cleanStartDate}{cleanEndDate}"
     currentTime = time.time()
     
     # 1. Check in-memory store
@@ -216,8 +221,10 @@ def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[
         if currentTime - entry["timestamp"] < cacheTtlSeconds:
             return entry["data"].copy()
 
-    # 2. Check on-disk cache
-    diskFilePath = os.path.join(cacheDirectory, f"{cacheKey}.pkl")
+    # 2. Check on-disk cache using safe hash
+    hashedCacheKey = hashlib.sha256(cacheKey.encode("utf-8")).hexdigest()
+    diskFileName = f"{hashedCacheKey}.pkl"
+    diskFilePath = os.path.join(cacheDirectory, diskFileName)
     if os.path.exists(diskFilePath):
         try:
             fileModTime = os.path.getmtime(diskFilePath)
@@ -227,15 +234,15 @@ def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[
                 cacheStore[cacheKey] = {"data": cachedFrame, "timestamp": currentTime}
                 return cachedFrame.copy()
         except Exception as readError:
-            logger.warning(f"Failed to read disk cache for {sym}: {readError}")
+            logger.warning(f"Failed to read disk cache for {safeSymbol}: {readError}")
 
     # 3. Download fresh data
     try:
-        logger.info(f"Downloading stock data for {sym} from {startDate} to {endDate}")
-        data = yf.download(sym, start=startDate, end=endDate, progress=False)
+        logger.info(f"Downloading stock data for {safeSymbol} from {safeStartDate} to {safeEndDate}")
+        data = yf.download(safeSymbol, start=safeStartDate, end=safeEndDate, progress=False)
 
         if data.empty:
-            logger.warning(f"No data returned for {sym}")
+            logger.warning(f"No data returned for {safeSymbol}")
             return pd.DataFrame()
 
         if isinstance(data.columns, pd.MultiIndex):
@@ -256,12 +263,12 @@ def loadStockData(symbol: str, startDate: str = "2015-01-01", endDate: Optional[
             with open(diskFilePath, "wb") as fileHandle:
                 pickle.dump(data, fileHandle)
         except Exception as writeError:
-            logger.warning(f"Failed to write disk cache for {sym}: {writeError}")
+            logger.warning(f"Failed to write disk cache for {safeSymbol}: {writeError}")
 
         return data.copy()
 
     except Exception as errorDetails:
-        logger.exception(f"Error downloading stock data for {sym}: {errorDetails}")
+        logger.exception(f"Error downloading stock data for {safeSymbol}: {errorDetails}")
         return pd.DataFrame()
 
 
