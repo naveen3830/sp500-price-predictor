@@ -32,6 +32,9 @@ Thumbs.db
 # pycache
 __pycache__/
 
+# cache
+backend/cache
+
 # Node / Frontend
 node_modules/
 dist/

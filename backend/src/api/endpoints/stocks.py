@@ -15,7 +15,6 @@ from src.schemas.stock import StockItem, StockDetailResponse, ForecastResponse, 
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
-
 # List S&P 500 stocks with optional sector filter and search
 @router.get("")
 def listStocks(

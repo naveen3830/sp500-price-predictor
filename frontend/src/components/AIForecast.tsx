@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   ResponsiveContainer,
   AreaChart,
@@ -10,6 +10,7 @@ import {
   CartesianGrid,
 } from "recharts"
 import { useTheme } from "../context/ThemeContext"
+import { useStockContext } from "../context/StockContext"
 import { predictStock, type ForecastResponse } from "../services/api"
 import { Cpu, Play, Loader2 } from "lucide-react"
 
@@ -42,13 +43,19 @@ const ForecastTooltip: React.FC<{ active?: boolean; payload?: Array<{ payload: F
 
 export const AIForecast: React.FC<AIForecastProps> = ({ symbol }) => {
   const { theme } = useTheme()
+  const { getCachedForecast, setCachedForecast } = useStockContext()
   const [forecastDays, setForecastDays] = useState<number>(15)
   const [epochs, setEpochs] = useState<number>(10)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<ForecastResponse | null>(null)
+  const [result, setResult] = useState<ForecastResponse | null>(() => getCachedForecast(symbol))
 
   const isDark = theme === "dark"
+
+  useEffect(() => {
+    setResult(getCachedForecast(symbol))
+    setError(null)
+  }, [symbol, getCachedForecast])
 
   const handleTrainAndPredict = async () => {
     setLoading(true)
@@ -56,6 +63,7 @@ export const AIForecast: React.FC<AIForecastProps> = ({ symbol }) => {
     try {
       const data = await predictStock(symbol, forecastDays, epochs)
       setResult(data)
+      setCachedForecast(symbol, data)
     } catch (err: any) {
       setError(err.message || "Model training failed")
     } finally {

@@ -51,12 +51,20 @@ const MainContent: React.FC = () => {
           {/* Bento Grid Main Key Metrics */}
           <KeyMetrics />
           {/* Checkout github sonarqube setup */}
-          {/* Dynamic Tab Panes */}
+          {/* Dynamic Tab Panes (Kept mounted to preserve state and model results across tab switches) */}
           <div className="transition-opacity duration-200">
-            {activeTab === "overview" && <PriceChart symbol={detail.info.symbol} />}
-            {activeTab === "technicals" && <TechnicalAnalysis symbol={detail.info.symbol} />}
-            {activeTab === "forecast" && <AIForecast symbol={detail.info.symbol} />}
-            {activeTab === "export" && <ExportData symbol={detail.info.symbol} />}
+            <div className={activeTab === "overview" ? "block" : "hidden"}>
+              <PriceChart symbol={detail.info.symbol} />
+            </div>
+            <div className={activeTab === "technicals" ? "block" : "hidden"}>
+              <TechnicalAnalysis symbol={detail.info.symbol} />
+            </div>
+            <div className={activeTab === "forecast" ? "block" : "hidden"}>
+              <AIForecast symbol={detail.info.symbol} />
+            </div>
+            <div className={activeTab === "export" ? "block" : "hidden"}>
+              <ExportData symbol={detail.info.symbol} />
+            </div>
           </div>
         </div>
       )
