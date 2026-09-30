@@ -9,6 +9,7 @@ import {
   type StockDetailResponse,
   type HistoryPoint,
   type IndicatorsResponse,
+  type ForecastResponse,
 } from "../services/api"
 
 export type TabType = "overview" | "technicals" | "forecast" | "export"
@@ -27,6 +28,8 @@ interface StockContextType {
   setActiveTab: (tab: TabType) => void
   getCachedHistory: (symbol: string, period: string) => Promise<HistoryPoint[]>
   getCachedIndicators: (symbol: string) => Promise<IndicatorsResponse>
+  getCachedForecast: (symbol: string) => ForecastResponse | null
+  setCachedForecast: (symbol: string, forecast: ForecastResponse) => void
 }
 
 const StockContext = createContext<StockContextType | undefined>(undefined)
@@ -58,6 +61,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const detailCache = useRef<Map<string, StockDetailResponse>>(new Map())
   const historyCache = useRef<Map<string, HistoryPoint[]>>(new Map())
   const indicatorsCache = useRef<Map<string, IndicatorsResponse>>(new Map())
+  const forecastCache = useRef<Map<string, ForecastResponse>>(new Map())
 
   // Initial load of stock list and sectors
   useEffect(() => {
@@ -152,6 +156,14 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return res
   }, [])
 
+  const getCachedForecast = useCallback((symbol: string): ForecastResponse | null => {
+    return forecastCache.current.get(symbol) || null
+  }, [])
+
+  const setCachedForecast = useCallback((symbol: string, forecast: ForecastResponse) => {
+    forecastCache.current.set(symbol, forecast)
+  }, [])
+
   const contextValue = useMemo<StockContextType>(
     () => ({
       stocks,
@@ -167,6 +179,8 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setActiveTab,
       getCachedHistory,
       getCachedIndicators,
+      getCachedForecast,
+      setCachedForecast,
     }),
     [
       stocks,
@@ -182,6 +196,8 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setActiveTab,
       getCachedHistory,
       getCachedIndicators,
+      getCachedForecast,
+      setCachedForecast,
     ]
   )
 

@@ -64,17 +64,9 @@ export const Header: React.FC = () => {
           </div>
 
           <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-                S&P 500 <span className="font-light text-slate-500 dark:text-slate-400">Predictor</span>
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-500/10 dark:bg-bullish/10 text-blue-600 dark:text-bullish border border-blue-500/20 dark:border-bullish/25">
-                Terminal v2.0
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
-              Institutional Market Analytics &bull; Deep Learning Neural Projections
-            </p>
+            <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+              S&P 500 <span className="font-light text-slate-500 dark:text-slate-400">Predictor</span>
+            </h1>
           </div>
         </div>
 
