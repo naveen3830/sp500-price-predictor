@@ -69,7 +69,7 @@ export const ExportData: React.FC<ExportDataProps> = ({ symbol }) => {
             </div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">Technical Indicator Matrix</h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Complete computed matrices including SMA, EMA, RSI, MACD, Bollinger Bands, ATR, OBV, and Stochastics.
+              Complete computed matrices including SMA, EMA, RSI, MACD, and Bollinger Bands.
             </p>
           </div>
 
