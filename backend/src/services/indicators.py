@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from typing import Dict, Any
 
 
@@ -19,6 +18,7 @@ def calculateRsi(series: pd.Series, period: int = 14) -> pd.Series:
     avgGain = gain.rolling(window=period, min_periods=period).mean()
     avgLoss = loss.rolling(window=period, min_periods=period).mean()
 
+    # wilder's smoothing
     for i in range(period, len(series)):
         avgGain.iloc[i] = (avgGain.iloc[i - 1] * (period - 1) + gain.iloc[i]) / period
         avgLoss.iloc[i] = (avgLoss.iloc[i - 1] * (period - 1) + loss.iloc[i]) / period
@@ -45,39 +45,12 @@ def calculateBollingerBands(series: pd.Series, period: int = 20, stdDev: float =
     return {"upper": upperBand, "middle": middleBand, "lower": lowerBand}
 
 
-def calculateAtr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
-    previousClose = close.shift(1)
-    rangeOne = high - low
-    rangeTwo = (high - previousClose).abs()
-    rangeThree = (low - previousClose).abs()
-    trueRange = pd.concat([rangeOne, rangeTwo, rangeThree], axis=1).max(axis=1)
-    return trueRange.rolling(window=period).mean()
-
-
-def calculateObv(close: pd.Series, volume: pd.Series) -> pd.Series:
-    priceDirection = np.sign(close.diff()).fillna(0)
-    return (priceDirection * volume).cumsum()
-
-
-def calculateStochastic(high: pd.Series, low: pd.Series, close: pd.Series, kPeriod: int = 14, dPeriod: int = 3) -> Dict[str, pd.Series]:
-    lowestLow = low.rolling(window=kPeriod).min()
-    highestHigh = high.rolling(window=kPeriod).max()
-    denominator = highestHigh - lowestLow
-    denominator = denominator.replace(0, np.nan)
-    stochK = 100 * (close - lowestLow) / denominator
-    stochD = stochK.rolling(window=dPeriod).mean()
-    return {"k": stochK, "d": stochD}
-
-
 def calculateAllIndicators(dataFrame: pd.DataFrame) -> pd.DataFrame:
     result = dataFrame.copy()
     if isinstance(result.columns, pd.MultiIndex):
         result.columns = result.columns.get_level_values(0)
 
     closePrices = result['Close']
-    highPrices = result['High']
-    lowPrices = result['Low']
-    volumeValues = result['Volume']
 
     result['SMA_20'] = calculateSma(closePrices, 20)
     result['SMA_50'] = calculateSma(closePrices, 50)
@@ -96,13 +69,6 @@ def calculateAllIndicators(dataFrame: pd.DataFrame) -> pd.DataFrame:
     result['BB_Upper'] = bollingerResult['upper']
     result['BB_Middle'] = bollingerResult['middle']
     result['BB_Lower'] = bollingerResult['lower']
-
-    result['ATR'] = calculateAtr(highPrices, lowPrices, closePrices)
-    result['OBV'] = calculateObv(closePrices, volumeValues)
-
-    stochResult = calculateStochastic(highPrices, lowPrices, closePrices)
-    result['Stoch_K'] = stochResult['k']
-    result['Stoch_D'] = stochResult['d']
 
     return result
 
